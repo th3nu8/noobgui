@@ -6,6 +6,7 @@
     }
 
     // --- Configuration ---
+    // This is your Cloudflare Worker URL (the secure proxy)
     const WORKER_URL = 'https://twilight-hill-3941.blueboltgamingyt.workers.dev';
     // --- End Configuration ---
 
@@ -182,27 +183,43 @@
         const loadingMsg = addMessage('AI is typing...', 'ai-msg');
 
         try {
+            // Send request to the secure worker proxy
             const response = await fetch(WORKER_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message: text })
+                body: JSON.stringify({ message: text }) // Send simple payload
             });
 
             loadingMsg.remove();
             
             if (!response.ok) {
+                // If the worker returns an HTTP error, try to read the error body
                 const errorText = await response.text();
-                throw new Error(`Worker Error (${response.status}): ${errorText.substring(0, 100)}...`);
+                throw new Error(`Worker HTTP Error (${response.status}): ${errorText.substring(0, 100)}...`);
             }
             
-            const data = await response.text(); 
-            addMessage(data, 'ai-msg');
+            // *** CRITICAL CHANGE: Expecting and parsing the full JSON response from the worker ***
+            const data = await response.json(); 
+            let aiResponseText;
+
+            if (data.candidates && data.candidates.length > 0) {
+                // SUCCESS: Extract the final message from the complex Gemini structure
+                aiResponseText = data.candidates[0].content.parts[0].text;
+            } else if (data.error) {
+                // Worker returned a JSON object with a specific error field
+                aiResponseText = `AI API Error: ${data.error.message}`;
+            } else {
+                // Unknown response structure
+                aiResponseText = 'Unknown API response format. Check Worker logs for the error.';
+            }
+
+            addMessage(aiResponseText, 'ai-msg');
 
         } catch (err) {
             loadingMsg.remove();
-            addMessage('**Connection Error:** ' + err.message, 'ai-msg');
+            addMessage('**Connection/Parsing Error:** ' + err.message, 'ai-msg');
         } finally {
             input.disabled = false;
             sendBtn.disabled = false;
