@@ -25,7 +25,13 @@
     style.textContent = `
         :host {
             font-family: sans-serif;
+            /* Ensure the host starts at the bottom-right coordinates */
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999999;
         }
+
         .container {
             width: 350px;
             height: 500px;
@@ -37,20 +43,22 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             overflow: hidden;
             border: 1px solid #333;
-            transition: height 0.3s, width 0.3s; /* for minimize transition */
+            transition: height 0.3s, width 0.3s;
         }
 
-        /* Styles for the new header/drag bar */
+        /* --- Header/Drag Bar Styles --- */
         #gui-header {
-            padding: 8px 15px;
+            height: 40px; /* Define a fixed height for the header */
+            padding: 0 15px; /* Removed vertical padding, using height instead */
             background-color: #111;
             color: #ddd;
-            cursor: grab; /* Indicates dragging capability */
+            cursor: grab;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-top-left-radius: 12px;
             border-top-right-radius: 12px;
+            flex-shrink: 0; /* Prevents header from shrinking */
         }
         #gui-header:active {
             cursor: grabbing;
@@ -64,10 +72,7 @@
             margin-left: 5px;
             cursor: pointer;
             padding: 2px 5px;
-            transition: opacity 0.2s;
-        }
-        .header-controls button:hover {
-            opacity: 0.7;
+            line-height: 1; /* Helps vertically align buttons */
         }
         .close-btn:hover {
             color: red;
@@ -76,7 +81,7 @@
 
         /* Minimized State */
         .minimized {
-            height: 40px; /* Header height */
+            height: 40px;
             width: 300px;
             border-bottom-left-radius: 12px;
             border-bottom-right-radius: 12px;
@@ -87,7 +92,7 @@
             display: none;
         }
 
-        /* Existing Styles Below */
+        /* --- Chat Area & Message Styles --- */
         .chat-area {
             flex-grow: 1;
             padding: 15px;
@@ -97,37 +102,107 @@
             gap: 10px;
         }
         .message {
-            padding: 8px 12px;
+            /* Reset specific padding/margin that might be inherited or overwritten */
+            padding: 8px 12px; 
             border-radius: 8px;
             max-width: 80%;
             font-size: 14px;
             line-height: 1.4;
             white-space: pre-wrap;
         }
-        /* ... (Keep existing message, input, button, and nav-bar styles) ... */
-
-        /* --- New Markdown and HTML Rendering Styles --- */
-        .markdown-content {
-            padding: 10px 15px;
-            margin: 0;
+        .user-msg {
+            background-color: #007bff;
+            align-self: flex-end;
         }
+        .ai-msg {
+            background-color: #333;
+            align-self: flex-start;
+        }
+
+        /* --- Input and Nav Bar Styles --- */
+        .input-area {
+            padding: 10px;
+            background-color: #252525;
+            display: flex;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+        input {
+            flex-grow: 1;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background: #1e1e1e;
+            color: white;
+            outline: none;
+        }
+        button.send-btn {
+            background: #007bff;
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .nav-bar {
+            height: 60px;
+            background-color: #111;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid #333;
+            flex-shrink: 0;
+        }
+        .nav-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0.7;
+            color: white;
+            font-size: 10px;
+        }
+        .nav-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+            margin-bottom: 2px;
+        }
+        .discord-btn svg {
+            fill: #5865F2;
+        }
+
+        /* --- Markdown and HTML Rendering Styles --- */
+        .markdown-content {
+            /* This targets the <div> that holds the parsed AI content */
+            padding: 0; /* Crucial: Remove the padding from the container div itself */
+            margin: 0;
+            width: 100%; /* Ensure it spans the full width of the message box */
+        }
+        
+        /* Lists */
         .markdown-content ul {
             list-style-type: disc;
-            padding-left: 20px;
-            margin-top: 5px;
-            margin-bottom: 5px;
+            padding-left: 20px;   /* Standard list indentation */
+            margin: 5px 0;
+            width: 100%;
         }
         .markdown-content li {
             margin-bottom: 5px;
             padding-left: 5px;
         }
+
+        /* Headings */
         .markdown-content h2 {
             font-size: 1.2em;
             margin-top: 15px;
             margin-bottom: 8px;
-            border-bottom: 1px solid #444;
             padding-bottom: 5px;
         }
+
+        /* Display Math */
         .math-display {
             display: block;
             text-align: center;
@@ -135,6 +210,8 @@
             font-size: 1.1em;
             font-family: serif;
         }
+
+        /* Horizontal Rules */
         .markdown-content hr {
             border: none;
             border-top: 1px solid #555;
