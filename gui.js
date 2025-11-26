@@ -126,6 +126,51 @@
         .discord-btn svg {
             fill: #5865F2;
         }
+        /* --- New Markdown and HTML Rendering Styles --- */
+
+        /* Target the container holding the rendered message */
+        .markdown-content {
+            /* Override default padding, reset margins for internal elements */
+            padding: 10px 15px; /* Adjust padding to give space around content */
+            margin: 0;
+        }
+
+        /* Fix for list indentation and spacing */
+        .markdown-content ul {
+            list-style-type: disc; /* Ensure dots are used */
+            padding-left: 20px;   /* Pull the list closer to the left edge */
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+        .markdown-content li {
+            margin-bottom: 5px;
+            padding-left: 5px;
+        }
+
+        /* Style for Headings (to remove the huge default spacing) */
+        .markdown-content h2 {
+            font-size: 1.2em;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #444; /* Optional visual separator */
+            padding-bottom: 5px;
+        }
+
+        /* Style for Display Math */
+        .math-display {
+            display: block;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 1.1em;
+            font-family: serif;
+        }
+        
+        /* Style for horizontal rules */
+        .markdown-content hr {
+            border: none;
+            border-top: 1px solid #555;
+            margin: 10px 0;
+        }
     `;
     shadow.appendChild(style);
 
@@ -164,27 +209,41 @@
     
     function addMessage(text, className) {
         const div = document.createElement('div');
-        div.className = `message ${className}`;
+        div.className = `message ${className} markdown-content`; // Add new class for styling
         
-        // --- FIX: Simple Markdown Parsing ---
+        // --- FIX: Advanced Markdown and LaTeX Parsing ---
+        let htmlText = text;
+
         // 1. Replace double asterisks (**) with bold tags (<b>)
-        let htmlText = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+        htmlText = htmlText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
         
-        // 2. Wrap display math ($$...$$) in a block element for better rendering
-        //    (Note: Full LaTeX rendering still requires a library like MathJax)
+        // 2. Replace Heading Level 2 (##) with H2 tags
+        htmlText = htmlText.replace(/^##\s*(.*)$/gm, '<h2>$1</h2>');
+        // Note: You can add more levels (e.g., /^\#\s*(.*)$/gm for <h1>) if needed.
+
+        // 3. Replace single asterisks (*) or dashes (-) for list items with <li> tags
+        // This regex captures * or - at the start of a line and wraps the text in <li>
+        htmlText = htmlText.replace(/^[*-]\s+(.*)/gm, '<li>$1</li>');
+        
+        // 4. Wrap all generated <li> items in an unordered list (<ul>)
+        // This is necessary for correct list rendering and indenting.
+        if (htmlText.includes('<li>')) {
+            htmlText = `<ul>${htmlText}</ul>`;
+        }
+
+        // 5. Wrap display math ($$...$$) in a block element for better rendering
         htmlText = htmlText.replace(/\$\$(.*?)\$\$/gs, '<div class="math-display">$1</div>');
         
-        // 3. Simple list item replacement
-        htmlText = htmlText.replace(/^\* (.*)/gm, '<li>$1</li>');
-        
-        // Use innerHTML to render the HTML/Markdown, not textContent
+        // 6. Horizontal Rules (---)
+        htmlText = htmlText.replace(/^---/gm, '<hr>');
+
+        // Use innerHTML to render the HTML/Markdown
         div.innerHTML = htmlText; 
         
         chatLog.appendChild(div);
         chatLog.scrollTop = chatLog.scrollHeight;
         return div;
     }
-
     async function handleSend() {
         const text = input.value.trim();
         if (!text) return;
