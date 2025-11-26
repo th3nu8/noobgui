@@ -1,26 +1,13 @@
-// Pocket Assistant Main Script - HOST THIS FILE PUBLICLY (e.g., GitHub Gist, GitHub Pages)
-// The bookmarklet loader will fetch and execute this file.
-
 (function() {
-    // Check if the widget is already present (prevents running the entire script twice)
     if (document.getElementById('pocket-assistant-widget')) {
         const w = document.getElementById('pocket-assistant-widget');
-        // Toggle visibility
         w.style.display = (w.style.display === 'none' ? 'flex' : 'none');
         return;
     }
-
-    // --- Configuration ---
-    // NOTE: This URL must be your deployed Cloudflare Worker URL
     const apiUrl = "https://twilight-hill-3941.blueboltgamingyt.workers.dev";
     let isGenerating = false;
-
-    // NEW SETTINGS:
-    let currentTheme = localStorage.getItem('paTheme') || 'dark'; // Load from storage or default to dark
-    // SVG icon path for the widget header (A simple 'information' or 'assistant' icon)
-    const defaultIconPath = 'M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z'; 
-
-    // Menu Item Placeholders
+    let currentTheme = localStorage.getItem('paTheme') || 'dark';
+    const defaultIconPath = 'M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z';
     const games = [
         { name: "Tetris", url: "https://www.google.com/search?q=online+tetris+game" },
         { name: "Snake", url: "https://www.google.com/search?q=online+snake+game" },
@@ -30,40 +17,29 @@
     const discordUrl = "https://discord.gg/placeholder_invite";
     const proxyPlaceholderUrl = "https://www.google.com/search?q=uv+proxy+web+search+placeholder";
 
-
-    // --- API and Utility Functions ---
-
-    // Function to handle retries for API calls (Exponential Backoff)
     async function fetchWithBackoff(url, options, maxRetries = 5) {
         for (let i = 0; i < maxRetries; i++) {
             try {
                 const response = await fetch(url, options);
-                // If not a rate limit error (429), return the response immediately
                 if (response.status !== 429) {
                     return response;
                 }
             } catch (error) {
                 console.error('Fetch error (retrying):', error);
             }
-            // Wait with exponential backoff and jitter
             const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
             await new Promise(resolve => setTimeout(resolve, delay));
         }
         throw new Error("API call failed after multiple retries.");
     }
 
-    // Function to call the Gemini API via the proxy worker
     async function generateContent(prompt) {
         if (isGenerating) return;
-
         isGenerating = true;
         addMessage(prompt, 'user');
-
         const loadingMsg = addMessage("Thinking...", 'ai', true);
-
         const payload = {
             contents: [{ parts: [{ text: prompt }] }],
-            // Enable Google Search grounding
             tools: [{ "google_search": {} }],
             systemInstruction: {
                 parts: [{ text: "You are a helpful and concise browser assistant. Respond clearly and in Markdown format. Use Google Search for current events." }]
@@ -97,38 +73,26 @@
         }
     }
 
-    // Function to load MathJax for rendering LaTeX/Math
     const loadMathJax = () => {
         if (window.MathJaxLoaded) return;
         window.MathJaxLoaded = true;
-
         const script = document.createElement('script');
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js';
         script.async = true;
         document.head.appendChild(script);
     };
 
-    // Function to convert basic Markdown to HTML
     const renderMarkdown = (text) => {
-        // 1. Bold: **text** -> <strong>text</strong>
         let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        // 2. Italics: *text* -> <em>text</em>
         html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-        // 3. Headings (Simple bolding): # Title -> <strong>Title</strong>
         html = html.replace(/^#+\s*(.*)/gm, '<strong>$1</strong>');
-        // 4. Numbered Lists: 1. Item -> <br>1. Item
         html = html.replace(/^(\d+)\.\s(.*?)/gm, '<br>$1. $2');
-        // 5. Bullet Points: - Item or * Item -> <br>&bull; Item
         html = html.replace(/^(-|\*)\s(.*?)/gm, '<br>&bull; $2');
-        // 6. Code Blocks: ```code``` -> <pre>code</pre>
         html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre>$2</pre>');
-        // 7. Newlines to <br> (for paragraphs)
         html = html.replace(/\n\n/g, '<br><br>');
         return html;
     };
 
-
-    // --- UI Setup ---
 
     const css = `
 .widget-container{width:90vw;max-width:400px;height:70vh;max-height:700px;box-shadow:0 10px 25px rgba(0,0,0,0.3);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;background-color:#1f2937;z-index:99999;position:fixed;bottom:16px;right:16px;font-family:'Inter',sans-serif;transition:background-color 0.3s}
@@ -147,10 +111,8 @@
 #chat-input{flex-grow:1;padding:8px;border-radius:8px 0 0 8px;border:none;background-color:#4b5563;color:white;transition:background-color 0.3s, color 0.3s}
 #send-btn{padding:8px 16px;background-color:#4f46e5;color:white;border-radius:0 8px 8px 0;border:none;transition:background-color 0.3s}
 .header{display:flex;justify-content:space-between;align-items:center;padding:12px;background-color:#4f46e5;color:white;font-weight:bold;border-radius:12px 12px 0 0;cursor:grab;transition:background-color 0.3s}
-
-/* --- Light Mode Styles --- */
 .widget-container.light-theme{background-color:#f9fafb;box-shadow:0 10px 25px rgba(0,0,0,0.15);border:1px solid #e5e7eb}
-.widget-container.light-theme .header{background-color:#10b981} /* Brighter header for light theme */
+.widget-container.light-theme .header{background-color:#10b981}
 .widget-container.light-theme .chat-input-container, .widget-container.light-theme .menu-bar{background-color:#f3f4f6}
 .widget-container.light-theme #chat-input{background-color:white;color:#1f2937;border:1px solid #d1d5db;border-radius:8px}
 .widget-container.light-theme #send-btn{background-color:#10b981}
@@ -160,8 +122,6 @@
 .widget-container.light-theme .dropdown-content{background-color:#f9fafb;box-shadow:0 -4px 10px rgba(0,0,0,0.1);border:1px solid #d1d5db}
 .widget-container.light-theme .dropdown-item{color:#1f2937}
 .widget-container.light-theme .dropdown-item:hover{background-color:#e5e7eb}
-
-/* --- Theme Toggle Switch Styles --- */
 .toggle-switch{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;cursor:pointer;user-select:none;}
 .toggle-label{color:inherit;font-size:14px;}
 .slider{position:relative;display:inline-block;width:34px;height:20px;border-radius:10px;background-color:#ccc;transition:0.4s;cursor:pointer}
@@ -171,22 +131,18 @@
 .hidden-checkbox{display:none}
     `;
 
-    // Inject CSS
     const style = document.createElement('style');
     style.innerHTML = css;
     document.head.appendChild(style);
 
-    // Create main container
     const widgetContainer = document.createElement('div');
     widgetContainer.id = 'pocket-assistant-widget';
     widgetContainer.className = 'widget-container';
 
-    // Apply initial theme based on localStorage
     if (currentTheme === 'light') {
         widgetContainer.classList.add('light-theme');
     }
 
-    // SVG Icon Creation Helper (Refactored to handle paths cleanly)
     const createSvg = (d, text) => {
         const xmlns = 'http://www.w3.org/2000/svg';
         const svg = document.createElementNS(xmlns, 'svg');
@@ -212,7 +168,6 @@
         return { icon: svg, text: span };
     };
 
-    // Menu Button Factory
     const createMenuButton = (id, iconDs, text, isLink = false, href = '') => {
         const btn = isLink ? document.createElement('a') : document.createElement('div');
         btn.id = id;
@@ -227,7 +182,6 @@
         return btn;
     };
 
-    // --- Header Setup ---
     const header = document.createElement('div');
     header.className = 'header';
 
@@ -235,7 +189,6 @@
     titleSpan.className = 'text-lg';
     titleSpan.textContent = 'Pocket Assistant';
 
-    // NEW: Add Icon to the header (using the defined path)
     const { icon: headerIcon } = createSvg(defaultIconPath, '');
     headerIcon.setAttribute('stroke-width', '1.5');
     headerIcon.style.cssText = 'width: 20px; height: 20px; margin-right: 8px; color: white;';
@@ -256,13 +209,11 @@
 
     widgetContainer.appendChild(header);
 
-    // Message Display Area
     const messageContainer = document.createElement('div');
     messageContainer.id = 'chat-messages';
     messageContainer.className = 'chat-messages';
     widgetContainer.appendChild(messageContainer);
 
-    // Input Area
     const inputContainer = document.createElement('div');
     inputContainer.className = 'chat-input-container';
 
@@ -279,45 +230,37 @@
 
     widgetContainer.appendChild(inputContainer);
 
-
-    // Menu Bar
     const menuBar = document.createElement('div');
     menuBar.className = 'menu-bar';
 
-    // Create Menu Items
     const gamesMenu = createMenuButton('games-menu', ['M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z', 'M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z'], 'Games');
     const searchMenu = createMenuButton('search-menu', 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z', 'Search');
-    const settingsMenu = createMenuButton('settings-menu', 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065zM12 16a4 4 0 100-8 4 4 0 000 8z', 'Settings'); // New Settings Button
+    const settingsMenu = createMenuButton('settings-menu', 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065zM12 16a4 4 0 100-8 4 4 0 000 8z', 'Settings');
     const discordMenu = createMenuButton('discord-link', ['M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.325-.325z'], 'Discord', true, discordUrl);
 
     menuBar.appendChild(gamesMenu);
     menuBar.appendChild(searchMenu);
-    menuBar.appendChild(settingsMenu); // Add Settings
+    menuBar.appendChild(settingsMenu);
     menuBar.appendChild(discordMenu);
     widgetContainer.appendChild(menuBar);
 
-    // Append to body and start MathJax load
     document.body.appendChild(widgetContainer);
     loadMathJax();
 
-    // --- Theme Logic ---
     const toggleTheme = () => {
         const isLight = widgetContainer.classList.toggle('light-theme');
         currentTheme = isLight ? 'light' : 'dark';
         localStorage.setItem('paTheme', currentTheme);
-        // Update the checkbox state manually
         const checkbox = document.getElementById('theme-toggle-checkbox');
         if (checkbox) {
             checkbox.checked = isLight;
         }
     };
 
-    // --- Chat Logic ---
-
     function addMessage(text, sender, isTemporary = false) {
         const msgDiv = document.createElement('div');
         msgDiv.className = `message ${sender}-message`;
-        msgDiv.style.whiteSpace = 'pre-wrap'; // Preserve formatting like newlines
+        msgDiv.style.whiteSpace = 'pre-wrap';
         msgDiv.innerHTML = renderMarkdown(text);
 
         if (isTemporary) {
@@ -327,7 +270,6 @@
         messageContainer.appendChild(msgDiv);
         messageContainer.scrollTop = messageContainer.scrollHeight;
 
-        // Trigger MathJax rendering on the new message
         if (window.MathJax && window.MathJax.typesetPromise) {
             window.MathJax.typesetPromise([msgDiv]).catch((err) => console.error('MathJax error:', err));
         }
@@ -339,16 +281,13 @@
         element.innerHTML = renderMarkdown(newText);
         messageContainer.scrollTop = messageContainer.scrollHeight;
 
-        // Retrigger MathJax on the updated message
         if (window.MathJax && window.MathJax.typesetPromise) {
             window.MathJax.typesetPromise([element]).catch((err) => console.error('MathJax error:', err));
         }
     }
 
-    // Initial welcome message
     addMessage("Hello! I'm your Pocket Assistant. Ask me a question to get started. Don't forget to check out the new Settings menu!", 'ai');
 
-    // Event listeners
     sendBtn.addEventListener('click', () => {
         const prompt = chatInput.value.trim();
         if (prompt && !isGenerating) {
@@ -363,7 +302,6 @@
         }
     });
 
-    // Games Dropdown
     const gamesDropdown = document.createElement('div');
     gamesDropdown.id = 'games-dropdown';
     gamesDropdown.className = 'dropdown-content';
@@ -377,17 +315,15 @@
         gamesDropdown.appendChild(item);
     });
     
-    // --- Settings Dropdown ---
     const settingsDropdown = document.createElement('div');
     settingsDropdown.id = 'settings-dropdown';
     settingsDropdown.className = 'dropdown-content';
     settingsMenu.appendChild(settingsDropdown);
 
-    // Theme Toggle UI element
     const themeToggleContainer = document.createElement('div');
-    themeToggleContainer.className = 'toggle-switch dropdown-item'; // Use dropdown-item style for padding
+    themeToggleContainer.className = 'toggle-switch dropdown-item';
     themeToggleContainer.onclick = (e) => {
-        e.stopPropagation(); // Prevent the dropdown from closing immediately
+        e.stopPropagation();
         toggleTheme();
     };
 
@@ -411,7 +347,6 @@
     settingsDropdown.appendChild(themeToggleContainer);
 
 
-    // Search Placeholder Button
     searchMenu.addEventListener('click', () => {
         const newWindow = window.open('about:blank', '_blank');
         if (newWindow) {
@@ -443,18 +378,15 @@ p{margin-top:20px;color:#9ca3af}
         }
     });
 
-    // Close Button
     closeBtn.addEventListener('click', () => {
         widgetContainer.style.display = 'none';
     });
 
 
-    // Dragging Logic
     let isDragging = false;
     let offsetX, offsetY;
-    let initialPositionSet = false; // Flag to prevent multiple initial position settings
+    let initialPositionSet = false;
 
-    // Function to set the widget's initial position centered on the screen the first time it opens
     const setInitialPosition = () => {
         if (!initialPositionSet) {
             const viewportWidth = window.innerWidth;
@@ -462,9 +394,7 @@ p{margin-top:20px;color:#9ca3af}
             const widgetWidth = widgetContainer.offsetWidth;
             const widgetHeight = widgetContainer.offsetHeight;
 
-            // Use right/bottom styles established in CSS, but fallback to centered if needed
             if (widgetContainer.style.position === 'fixed') {
-                // Keep the default bottom/right position defined in CSS
             } else {
                 widgetContainer.style.position = 'fixed';
                 widgetContainer.style.left = (viewportWidth / 2 - widgetWidth / 2) + 'px';
@@ -474,42 +404,35 @@ p{margin-top:20px;color:#9ca3af}
         }
     };
     
-    // Call on load (it's fine to call this even if CSS sets position)
     setInitialPosition();
-    window.addEventListener('resize', setInitialPosition); // Re-center on resize, though position:fixed bottom/right works better
+    window.addEventListener('resize', setInitialPosition);
 
     header.addEventListener('mousedown', (e) => {
-        // Only start dragging if the primary button is pressed
         if (e.button !== 0) return;
         
         isDragging = true;
         
-        // Ensure widget is positioned absolutely/fixed for dragging
         if (widgetContainer.style.position !== 'fixed') {
             widgetContainer.style.position = 'fixed';
         }
         
-        // Calculate offset relative to the viewport
         const rect = widgetContainer.getBoundingClientRect();
         offsetX = e.clientX - rect.left;
         offsetY = e.clientY - rect.top;
         
-        // Disable default bottom/right CSS positioning during drag
         widgetContainer.style.right = 'auto';
         widgetContainer.style.bottom = 'auto';
 
         widgetContainer.style.cursor = 'grabbing';
-        e.preventDefault(); // Prevent text selection
+        e.preventDefault();
     });
 
     document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
         
-        // Calculate new position
         let newX = e.clientX - offsetX;
         let newY = e.clientY - offsetY;
         
-        // Clamp position to viewport bounds (basic)
         const maxLeft = window.innerWidth - widgetContainer.offsetWidth;
         const maxTop = window.innerHeight - widgetContainer.offsetHeight;
         
@@ -525,7 +448,6 @@ p{margin-top:20px;color:#9ca3af}
         widgetContainer.style.cursor = 'grab';
     });
     
-    // Add touch support for dragging
     header.addEventListener('touchstart', (e) => {
         const touch = e.touches[0];
         isDragging = true;
