@@ -27,7 +27,6 @@
     style.textContent = `
         :host {
             font-family: sans-serif;
-            /* Ensure the host starts at the bottom-right coordinates */
             position: fixed;
             bottom: 20px;
             right: 20px;
@@ -79,8 +78,7 @@
         .close-btn:hover {
             color: red;
         }
-        /* End Header Styles */
-
+        
         /* Minimized State */
         .minimized {
             height: 40px;
@@ -94,7 +92,7 @@
             display: none;
         }
 
-        /* --- Chat Area & Message Styles --- */
+        /* --- CHAT AREA AND MESSAGE STYLES (FINAL REVISION) --- */
         .chat-area {
             flex-grow: 1;
             padding: 15px;
@@ -103,25 +101,29 @@
             flex-direction: column;
             gap: 10px;
         }
+        
         .message {
-            padding: 8px 12px; 
+            padding: 8px 12px;
             border-radius: 8px;
-            max-width: 80%;
             font-size: 14px;
             line-height: 1.4;
-            white-space: normal; /* Use normal wrapping */
-            word-wrap: break-word; /* Ensure long words break */
+            white-space: normal;
+            word-wrap: break-word;
+            
+            /* FINAL FIX: Forces element to size based on content width */
+            display: table;
+            max-width: 80%; 
         }
+        
         .user-msg {
             background-color: #007bff;
-            align-self: flex-end;
-            /* Added margin to the left */
-            margin-left: auto;
+            /* Pushes the message to the right side */
+            margin-left: auto; 
         }
+
         .ai-msg {
             background-color: #333;
-            align-self: flex-start;
-            /* Added margin to the right to visually separate from the edge */
+            /* Pushes the message to the left side */
             margin-right: auto;
         }
 
@@ -290,7 +292,6 @@
         
         // 4. Wrap all generated <li> items in an unordered list (<ul>)
         if (htmlText.includes('<li>')) {
-            // Need to handle multi-line inputs that may already be wrapped
             if (!htmlText.includes('<ul>')) {
                  htmlText = `<ul>${htmlText}</ul>`;
             }
@@ -319,6 +320,7 @@
         
         input.disabled = true;
         sendBtn.disabled = true;
+        // The "AI is typing..." message needs the .ai-msg class to use the CSS margin/sizing fix
         const loadingMsg = addMessage('AI is typing...', 'ai-msg');
 
         try {
