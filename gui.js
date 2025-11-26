@@ -6,13 +6,15 @@
     }
 
     // --- Configuration ---
+    // NOTE: Update this URL to match your deployed Cloudflare Worker endpoint
     const WORKER_URL = 'https://twilight-hill-3941.blueboltgamingyt.workers.dev';
     // --- End Configuration ---
 
     // 2. Create Host and Shadow DOM
     const host = document.createElement('div');
     host.id = 'my-ai-gui-root';
-    host.style.position = 'fixed';
+    // The initial position is set here, but will be overwritten by the drag logic
+    host.style.position = 'fixed'; 
     host.style.bottom = '20px';
     host.style.right = '20px';
     host.style.zIndex = '999999';
@@ -20,12 +22,18 @@
 
     const shadow = host.attachShadow({ mode: 'open' });
 
-    // 3. Define Styles
+    // 3. Define Styles (Includes fixes for dragging and markdown rendering)
     const style = document.createElement('style');
     style.textContent = `
         :host {
             font-family: sans-serif;
+            /* Ensure the host starts at the bottom-right coordinates */
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999999;
         }
+
         .container {
             width: 350px;
             height: 500px;
@@ -37,7 +45,56 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             overflow: hidden;
             border: 1px solid #333;
+            transition: height 0.3s, width 0.3s;
         }
+
+        /* --- Header/Drag Bar Styles --- */
+        #gui-header {
+            height: 40px;
+            padding: 0 15px;
+            background-color: #111;
+            color: #ddd;
+            cursor: grab;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            flex-shrink: 0;
+        }
+        #gui-header:active {
+            cursor: grabbing;
+        }
+        .header-controls button {
+            background: none;
+            border: none;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            margin-left: 5px;
+            cursor: pointer;
+            padding: 2px 5px;
+            line-height: 1;
+        }
+        .close-btn:hover {
+            color: red;
+        }
+        /* End Header Styles */
+
+        /* Minimized State */
+        .minimized {
+            height: 40px;
+            width: 300px;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+        .minimized .chat-area, 
+        .minimized .input-area,
+        .minimized .nav-bar {
+            display: none;
+        }
+
+        /* --- Chat Area & Message Styles --- */
         .chat-area {
             flex-grow: 1;
             padding: 15px;
@@ -47,26 +104,34 @@
             gap: 10px;
         }
         .message {
-            padding: 8px 12px;
+            padding: 8px 12px; 
             border-radius: 8px;
             max-width: 80%;
             font-size: 14px;
             line-height: 1.4;
-            white-space: pre-wrap;
+            white-space: normal; /* Use normal wrapping */
+            word-wrap: break-word; /* Ensure long words break */
         }
         .user-msg {
             background-color: #007bff;
             align-self: flex-end;
+            /* Added margin to the left */
+            margin-left: auto;
         }
         .ai-msg {
             background-color: #333;
             align-self: flex-start;
+            /* Added margin to the right to visually separate from the edge */
+            margin-right: auto;
         }
+
+        /* --- Input and Nav Bar Styles --- */
         .input-area {
             padding: 10px;
             background-color: #252525;
             display: flex;
             gap: 5px;
+            flex-shrink: 0;
         }
         input {
             flex-grow: 1;
@@ -84,14 +149,6 @@
             padding: 8px 12px;
             border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        button.send-btn:hover:not(:disabled) {
-            background-color: #0056b3;
-        }
-        button.send-btn:disabled {
-            background-color: #555;
-            cursor: not-allowed;
         }
         .nav-bar {
             height: 60px;
@@ -100,6 +157,7 @@
             justify-content: space-around;
             align-items: center;
             border-top: 1px solid #333;
+            flex-shrink: 0;
         }
         .nav-btn {
             background: none;
@@ -109,12 +167,8 @@
             flex-direction: column;
             align-items: center;
             opacity: 0.7;
-            transition: opacity 0.2s;
             color: white;
             font-size: 10px;
-        }
-        .nav-btn:hover {
-            opacity: 1;
         }
         .nav-btn svg {
             width: 24px;
@@ -125,37 +179,35 @@
         .discord-btn svg {
             fill: #5865F2;
         }
-        /* --- New Markdown and HTML Rendering Styles --- */
 
-        /* Target the container holding the rendered message */
+        /* --- Markdown and HTML Rendering Styles --- */
         .markdown-content {
-            /* Override default padding, reset margins for internal elements */
-            padding: 10px 15px; /* Adjust padding to give space around content */
+            padding: 0;
             margin: 0;
+            width: 100%;
         }
-
-        /* Fix for list indentation and spacing */
+        
+        /* Lists */
         .markdown-content ul {
-            list-style-type: disc; /* Ensure dots are used */
-            padding-left: 20px;   /* Pull the list closer to the left edge */
-            margin-top: 5px;
-            margin-bottom: 5px;
+            list-style-type: disc;
+            padding-left: 20px;
+            margin: 5px 0;
+            width: 100%;
         }
         .markdown-content li {
             margin-bottom: 5px;
             padding-left: 5px;
         }
 
-        /* Style for Headings (to remove the huge default spacing) */
+        /* Headings */
         .markdown-content h2 {
             font-size: 1.2em;
             margin-top: 15px;
             margin-bottom: 8px;
-            border-bottom: 1px solid #444; /* Optional visual separator */
             padding-bottom: 5px;
         }
 
-        /* Style for Display Math */
+        /* Display Math */
         .math-display {
             display: block;
             text-align: center;
@@ -163,8 +215,8 @@
             font-size: 1.1em;
             font-family: serif;
         }
-        
-        /* Style for horizontal rules */
+
+        /* Horizontal Rules */
         .markdown-content hr {
             border: none;
             border-top: 1px solid #555;
@@ -213,7 +265,7 @@
     const input = shadow.getElementById('user-input');
     const sendBtn = shadow.getElementById('send-btn');
     const guiContainer = shadow.querySelector('.container');
-    const guiRoot = host; // The draggable element is the host
+    const guiRoot = host; 
     const guiHeader = shadow.getElementById('gui-header');
     const minBtn = shadow.getElementById('min-btn');
     const closeBtn = shadow.getElementById('close-btn');
@@ -234,12 +286,14 @@
         htmlText = htmlText.replace(/^##\s*(.*)$/gm, '<h2>$1</h2>');
 
         // 3. Replace single asterisks/dashes (*) for list items with <li> tags
-        // This regex ensures we only look for list markers at the start of a line
         htmlText = htmlText.replace(/^[*-]\s+(.*)/gm, '<li>$1</li>');
         
         // 4. Wrap all generated <li> items in an unordered list (<ul>)
         if (htmlText.includes('<li>')) {
-            htmlText = `<ul>${htmlText}</ul>`;
+            // Need to handle multi-line inputs that may already be wrapped
+            if (!htmlText.includes('<ul>')) {
+                 htmlText = `<ul>${htmlText}</ul>`;
+            }
         }
 
         // 5. Wrap display math ($$...$$) in a block element
@@ -257,7 +311,6 @@
 
     // --- AI Interaction Logic (Uses .text() for plain text response) ---
     async function handleSend() {
-        // ... (Keep existing handleSend logic here, which is too long to repeat, but ensure it uses the logic from the last correct step, i.e., fetching the text response) ...
         const text = input.value.trim();
         if (!text) return;
 
@@ -307,39 +360,41 @@
 
         function dragMouseDown(e) {
             e = e || window.event;
-            // Prevent text selection when dragging
             e.preventDefault();
-            // Get the mouse cursor position at startup:
+            
             pos3 = e.clientX;
             pos4 = e.clientY;
-            shadow.onmouseup = closeDragElement;
-            // Call a function whenever the cursor moves:
-            shadow.onmousemove = elementDrag;
+            
+            // CRITICAL FIX: Attach events to the global window object
+            window.onmouseup = closeDragElement;
+            window.onmousemove = elementDrag;
+            
+            document.body.style.cursor = 'grabbing';
+            dragHandle.style.cursor = 'grabbing';
         }
 
         function elementDrag(e) {
             e = e || window.event;
             e.preventDefault();
-            // Calculate the new cursor position:
+            
             pos1 = pos3 - e.clientX;
             pos2 = pos4 - e.clientY;
             pos3 = e.clientX;
             pos4 = e.clientY;
             
-            // Set the element's new position:
-            // Ensure the element's positioning style is 'fixed' (set on the host)
             elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
             elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
             
-            // Override 'bottom' and 'right' styles set during initialization
             elmnt.style.bottom = 'auto';
             elmnt.style.right = 'auto';
         }
 
         function closeDragElement() {
-            // Stop moving when mouse button is released:
-            shadow.onmouseup = null;
-            shadow.onmousemove = null;
+            window.onmouseup = null;
+            window.onmousemove = null;
+            
+            document.body.style.cursor = 'default';
+            dragHandle.style.cursor = 'grab';
         }
     }
     
@@ -347,13 +402,9 @@
     function toggleMinimize() {
         guiContainer.classList.toggle('minimized');
         if (guiContainer.classList.contains('minimized')) {
-            minBtn.textContent = '☐'; // Change to Maximize icon
-            guiRoot.style.width = '300px'; 
-            guiRoot.style.height = '40px';
+            minBtn.textContent = '☐';
         } else {
-            minBtn.textContent = '—'; // Change back to Minimize icon
-            guiRoot.style.width = '350px';
-            guiRoot.style.height = '500px';
+            minBtn.textContent = '—';
         }
     }
 
@@ -371,7 +422,6 @@
         }
     });
 
-    // Attach control listeners
     minBtn.addEventListener('click', toggleMinimize);
     closeBtn.addEventListener('click', closeGui);
 
