@@ -25,13 +25,7 @@
     style.textContent = `
         :host {
             font-family: sans-serif;
-            /* Ensure the host starts at the bottom-right coordinates */
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 999999;
         }
-
         .container {
             width: 350px;
             height: 500px;
@@ -43,56 +37,7 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             overflow: hidden;
             border: 1px solid #333;
-            transition: height 0.3s, width 0.3s;
         }
-
-        /* --- Header/Drag Bar Styles --- */
-        #gui-header {
-            height: 40px; /* Define a fixed height for the header */
-            padding: 0 15px; /* Removed vertical padding, using height instead */
-            background-color: #111;
-            color: #ddd;
-            cursor: grab;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top-left-radius: 12px;
-            border-top-right-radius: 12px;
-            flex-shrink: 0; /* Prevents header from shrinking */
-        }
-        #gui-header:active {
-            cursor: grabbing;
-        }
-        .header-controls button {
-            background: none;
-            border: none;
-            color: white;
-            font-weight: bold;
-            font-size: 16px;
-            margin-left: 5px;
-            cursor: pointer;
-            padding: 2px 5px;
-            line-height: 1; /* Helps vertically align buttons */
-        }
-        .close-btn:hover {
-            color: red;
-        }
-        /* End Header Styles */
-
-        /* Minimized State */
-        .minimized {
-            height: 40px;
-            width: 300px;
-            border-bottom-left-radius: 12px;
-            border-bottom-right-radius: 12px;
-        }
-        .minimized .chat-area, 
-        .minimized .input-area,
-        .minimized .nav-bar {
-            display: none;
-        }
-
-        /* --- Chat Area & Message Styles --- */
         .chat-area {
             flex-grow: 1;
             padding: 15px;
@@ -102,8 +47,7 @@
             gap: 10px;
         }
         .message {
-            /* Reset specific padding/margin that might be inherited or overwritten */
-            padding: 8px 12px; 
+            padding: 8px 12px;
             border-radius: 8px;
             max-width: 80%;
             font-size: 14px;
@@ -118,14 +62,11 @@
             background-color: #333;
             align-self: flex-start;
         }
-
-        /* --- Input and Nav Bar Styles --- */
         .input-area {
             padding: 10px;
             background-color: #252525;
             display: flex;
             gap: 5px;
-            flex-shrink: 0;
         }
         input {
             flex-grow: 1;
@@ -143,6 +84,14 @@
             padding: 8px 12px;
             border-radius: 4px;
             cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button.send-btn:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+        button.send-btn:disabled {
+            background-color: #555;
+            cursor: not-allowed;
         }
         .nav-bar {
             height: 60px;
@@ -151,7 +100,6 @@
             justify-content: space-around;
             align-items: center;
             border-top: 1px solid #333;
-            flex-shrink: 0;
         }
         .nav-btn {
             background: none;
@@ -161,8 +109,12 @@
             flex-direction: column;
             align-items: center;
             opacity: 0.7;
+            transition: opacity 0.2s;
             color: white;
             font-size: 10px;
+        }
+        .nav-btn:hover {
+            opacity: 1;
         }
         .nav-btn svg {
             width: 24px;
@@ -173,36 +125,37 @@
         .discord-btn svg {
             fill: #5865F2;
         }
+        /* --- New Markdown and HTML Rendering Styles --- */
 
-        /* --- Markdown and HTML Rendering Styles --- */
+        /* Target the container holding the rendered message */
         .markdown-content {
-            /* This targets the <div> that holds the parsed AI content */
-            padding: 0; /* Crucial: Remove the padding from the container div itself */
+            /* Override default padding, reset margins for internal elements */
+            padding: 10px 15px; /* Adjust padding to give space around content */
             margin: 0;
-            width: 100%; /* Ensure it spans the full width of the message box */
         }
-        
-        /* Lists */
+
+        /* Fix for list indentation and spacing */
         .markdown-content ul {
-            list-style-type: disc;
-            padding-left: 20px;   /* Standard list indentation */
-            margin: 5px 0;
-            width: 100%;
+            list-style-type: disc; /* Ensure dots are used */
+            padding-left: 20px;   /* Pull the list closer to the left edge */
+            margin-top: 5px;
+            margin-bottom: 5px;
         }
         .markdown-content li {
             margin-bottom: 5px;
             padding-left: 5px;
         }
 
-        /* Headings */
+        /* Style for Headings (to remove the huge default spacing) */
         .markdown-content h2 {
             font-size: 1.2em;
             margin-top: 15px;
             margin-bottom: 8px;
+            border-bottom: 1px solid #444; /* Optional visual separator */
             padding-bottom: 5px;
         }
 
-        /* Display Math */
+        /* Style for Display Math */
         .math-display {
             display: block;
             text-align: center;
@@ -210,8 +163,8 @@
             font-size: 1.1em;
             font-family: serif;
         }
-
-        /* Horizontal Rules */
+        
+        /* Style for horizontal rules */
         .markdown-content hr {
             border: none;
             border-top: 1px solid #555;
