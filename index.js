@@ -1,1 +1,769 @@
-javascript:(function() {     if (document.getElementById('noobs-gui-widget')) {         const w = document.getElementById('noobs-gui-widget');         w.style.display = (w.style.display === 'none' ?%20%27flex%27%20:%20%27none%27);%20%20%20%20%20%20%20%20%20return;%20%20%20%20%20}%20%20%20%20%20const%20apiUrl%20=%20%22https://twilight-hill-3941.blueboltgamingyt.workers.dev%22;%20%20%20%20%20let%20isGenerating%20=%20false;%20%20%20%20%20let%20currentColor%20=%20localStorage.getItem(%27noobsGuiColor%27)%20||%20%27blue%27;%20%20%20%20%20const%20defaultIconPath%20=%20%27M12%202C6.477%202%202%206.477%202%2012s4.477%2010%2010%2010%2010-4.477%2010-10S17.523%202%2012%202zm1%2014h-2v-2h2v2zm0-4h-2V7h2v5z%27;%20%20%20%20%20const%20games%20=%20[%20%20%20%20%20%20%20%20%20{%20name:%20%22Tetris%22,%20url:%20%22https://www.google.com/search?q=online+tetris+game%22%20},%20%20%20%20%20%20%20%20%20{%20name:%20%22Snake%22,%20url:%20%22https://www.google.com/search?q=online+snake+game%22%20},%20%20%20%20%20%20%20%20%20{%20name:%20%222048%22,%20url:%20%22https://www.google.com/search?q=online+2048+game%22%20},%20%20%20%20%20%20%20%20%20{%20name:%20%22Minesweeper%22,%20url:%20%22https://www.google.com/search?q=online+minesweeper+game%22%20}%20%20%20%20%20];%20%20%20%20%20const%20discordUrl%20=%20%22https://discord.gg/placeholder_invite%22;%20%20%20%20%20const%20proxyPlaceholderUrl%20=%20%22https://www.google.com/search?q=uv+proxy+web+search+placeholder%22;%20%20%20%20%20%20const%20colorThemes%20=%20{%20%20%20%20%20%20%20%20%20blue:%20{%20primary:%20%27#4f46e5',%20secondary:%20'#818cf8',%20bg:%20'#1f2937',%20inputBg:%20'#4b5563',%20menuBg:%20'#374151'%20},%20%20%20%20%20%20%20%20%20orange:%20{%20primary:%20'#ea580c',%20secondary:%20'#fb923c',%20bg:%20'#1c1917',%20inputBg:%20'#44403c',%20menuBg:%20'#292524'%20},%20%20%20%20%20%20%20%20%20red:%20{%20primary:%20'#dc2626',%20secondary:%20'#f87171',%20bg:%20'#1f1f1f',%20inputBg:%20'#3f3f3f',%20menuBg:%20'#2a2a2a'%20},%20%20%20%20%20%20%20%20%20white:%20{%20primary:%20'#059669',%20secondary:%20'#34d399',%20bg:%20'#f9fafb',%20inputBg:%20'#ffffff',%20menuBg:%20'#f3f4f6',%20text:%20'#1f2937'%20},%20%20%20%20%20%20%20%20%20black:%20{%20primary:%20'#6366f1',%20secondary:%20'#a5b4fc',%20bg:%20'#000000',%20inputBg:%20'#1a1a1a',%20menuBg:%20'#0a0a0a'%20}%20%20%20%20%20};%20%20%20%20%20%20async%20function%20fetchWithBackoff(url,%20options,%20maxRetries%20=%205)%20{%20%20%20%20%20%20%20%20%20for%20(let%20i%20=%200;%20i%20%3C%20maxRetries;%20i++)%20{%20%20%20%20%20%20%20%20%20%20%20%20%20try%20{%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20response%20=%20await%20fetch(url,%20options);%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20if%20(response.status%20!==%20429)%20{%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20return%20response;%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20}%20%20%20%20%20%20%20%20%20%20%20%20%20}%20catch%20(error)%20{%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20console.error('Fetch%20error%20(retrying):',%20error);%20%20%20%20%20%20%20%20%20%20%20%20%20}%20%20%20%20%20%20%20%20%20%20%20%20%20const%20delay%20=%20Math.pow(2,%20i)%20*%201000%20+%20Math.random()%20*%201000;%20%20%20%20%20%20%20%20%20%20%20%20%20await%20new%20Promise(resolve%20=%3E%20setTimeout(resolve,%20delay));%20%20%20%20%20%20%20%20%20}%20%20%20%20%20%20%20%20%20throw%20new%20Error(%22API%20call%20failed%20after%20multiple%20retries.%22);%20%20%20%20%20}%20%20%20%20%20%20async%20function%20generateContent(prompt)%20{%20%20%20%20%20%20%20%20%20if%20(isGenerating)%20return;%20%20%20%20%20%20%20%20%20isGenerating%20=%20true;%20%20%20%20%20%20%20%20%20addMessage(prompt,%20'user');%20%20%20%20%20%20%20%20%20const%20loadingMsg%20=%20addMessage(%22Thinking...%22,%20'ai',%20true);%20%20%20%20%20%20%20%20%20const%20payload%20=%20{%20%20%20%20%20%20%20%20%20%20%20%20%20contents:%20[{%20parts:%20[{%20text:%20prompt%20}]%20}],%20%20%20%20%20%20%20%20%20%20%20%20%20tools:%20[{%20%22google_search%22:%20{}%20}],%20%20%20%20%20%20%20%20%20%20%20%20%20systemInstruction:%20{%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20parts:%20[{%20text:%20%22You%20are%20a%20helpful%20and%20concise%20browser%20assistant.%20Respond%20clearly%20and%20in%20Markdown%20format.%20Use%20Google%20Search%20for%20current%20events.%22%20}]%20%20%20%20%20%20%20%20%20%20%20%20%20},%20%20%20%20%20%20%20%20%20};%20%20%20%20%20%20%20%20%20%20try%20{%20%20%20%20%20%20%20%20%20%20%20%20%20const%20response%20=%20await%20fetchWithBackoff(apiUrl,%20{%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20method:%20'POST',%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20headers:%20{%20'Content-Type':%20'application/json'%20},%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20body:%20JSON.stringify(payload)%20%20%20%20%20%20%20%20%20%20%20%20%20});%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20result%20=%20await%20response.json();%20%20%20%20%20%20%20%20%20%20%20%20%20let%20generatedText%20=%20%22Sorry,%20I%20encountered%20an%20issue.%20Please%20try%20again.%22;%20%20%20%20%20%20%20%20%20%20%20%20%20%20if%20(result.error)%20{%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20generatedText%20=%20%60Proxy%20Error:%20${result.error}.%20Double-check%20your%20Cloudflare%20Worker%20deployment%20and%20the%20GEMINI_API_KEY%20environment%20variable.%20If%20you%20get%20'Method%20not%20allowed',%20ensure%20you%20are%20typing%20a%20question%20and%20clicking%20the%20'Send'%20button,%20not%20just%20clicking%20the%20bookmarklet%20again.%60;%20%20%20%20%20%20%20%20%20%20%20%20%20}%20else%20if%20(result.candidates%20&&%20result.candidates.length%20%3E%200%20&&%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20result.candidates[0].content%20&&%20result.candidates[0].content.parts.length%20%3E%200)%20{%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20generatedText%20=%20result.candidates[0].content.parts[0].text%20||%20generatedText;%20%20%20%20%20%20%20%20%20%20%20%20%20}%20%20%20%20%20%20%20%20%20%20%20%20%20%20updateMessage(loadingMsg,%20generatedText);%20%20%20%20%20%20%20%20%20%20}%20catch%20(error)%20{%20%20%20%20%20%20%20%20%20%20%20%20%20console.error('Network%20Error:',%20error);%20%20%20%20%20%20%20%20%20%20%20%20%20updateMessage(loadingMsg,%20%22Error:%20A%20network%20issue%20occurred.%20Ensure%20your%20Cloudflare%20Worker%20is%20deployed%20and%20its%20URL%20is%20correctly%20entered%20in%20the%20bookmarklet%20code.%22);%20%20%20%20%20%20%20%20%20}%20finally%20{%20%20%20%20%20%20%20%20%20%20%20%20%20isGenerating%20=%20false;%20%20%20%20%20%20%20%20%20}%20%20%20%20%20}%20%20%20%20%20%20const%20loadMathJax%20=%20()%20=%3E%20{%20%20%20%20%20%20%20%20%20if%20(window.MathJaxLoaded)%20return;%20%20%20%20%20%20%20%20%20window.MathJaxLoaded%20=%20true;%20%20%20%20%20%20%20%20%20const%20script%20=%20document.createElement('script');%20%20%20%20%20%20%20%20%20script.src%20=%20'https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js';%20%20%20%20%20%20%20%20%20script.async%20=%20true;%20%20%20%20%20%20%20%20%20document.head.appendChild(script);%20%20%20%20%20};%20%20%20%20%20%20const%20renderMarkdown%20=%20(text)%20=%3E%20{%20%20%20%20%20%20%20%20%20let%20html%20=%20text.replace(/\*\*(.*?)\*\*/g,%20'%3Cstrong%3E$1%3C/strong%3E');%20%20%20%20%20%20%20%20%20html%20=%20html.replace(/\*(.*?)\*/g,%20'%3Cem%3E$1%3C/em%3E');%20%20%20%20%20%20%20%20%20html%20=%20html.replace(/^#+\s*(.*)/gm,%20'%3Cstrong%3E$1%3C/strong%3E');%20%20%20%20%20%20%20%20%20html%20=%20html.replace(/^(\d+)\.\s(.*?)/gm,%20'%3Cbr%3E$1.%20$2');%20%20%20%20%20%20%20%20%20html%20=%20html.replace(/^(-|\*)\s(.*?)/gm,%20'%3Cbr%3E&bull;%20$2');%20%20%20%20%20%20%20%20%20html%20=%20html.replace(/%60%60%60(\w+)?\n([\s\S]*?)%60%60%60/g,%20'%3Cpre%3E$2%3C/pre%3E');%20%20%20%20%20%20%20%20%20html%20=%20html.replace(/\n\n/g,%20'%3Cbr%3E%3Cbr%3E');%20%20%20%20%20%20%20%20%20return%20html;%20%20%20%20%20};%20%20%20%20%20%20const%20applyColorTheme%20=%20(color)%20=%3E%20{%20%20%20%20%20%20%20%20%20const%20theme%20=%20colorThemes[color];%20%20%20%20%20%20%20%20%20const%20widget%20=%20document.getElementById('noobs-gui-widget');%20%20%20%20%20%20%20%20%20if%20(!widget)%20return;%20%20%20%20%20%20%20%20%20%20widget.style.backgroundColor%20=%20theme.bg;%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20header%20=%20widget.querySelector('.header');%20%20%20%20%20%20%20%20%20if%20(header)%20header.style.backgroundColor%20=%20theme.primary;%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20inputContainer%20=%20widget.querySelector('.chat-input-container');%20%20%20%20%20%20%20%20%20if%20(inputContainer)%20inputContainer.style.backgroundColor%20=%20theme.menuBg;%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20chatInput%20=%20widget.querySelector('#chat-input');%20%20%20%20%20%20%20%20%20if%20(chatInput)%20{%20%20%20%20%20%20%20%20%20%20%20%20%20chatInput.style.backgroundColor%20=%20theme.inputBg;%20%20%20%20%20%20%20%20%20%20%20%20%20chatInput.style.color%20=%20theme.text%20||%20'#ffffff';%20%20%20%20%20%20%20%20%20%20%20%20%20if%20(color%20===%20'white')%20{%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20chatInput.style.border%20=%20'1px%20solid%20#d1d5db';%20%20%20%20%20%20%20%20%20%20%20%20%20}%20%20%20%20%20%20%20%20%20}%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20sendBtn%20=%20widget.querySelector('#send-btn');%20%20%20%20%20%20%20%20%20if%20(sendBtn)%20sendBtn.style.backgroundColor%20=%20theme.primary;%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20menuBar%20=%20widget.querySelector('.menu-bar');%20%20%20%20%20%20%20%20%20if%20(menuBar)%20menuBar.style.backgroundColor%20=%20theme.menuBg;%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20aiMessages%20=%20widget.querySelectorAll('.ai-message');%20%20%20%20%20%20%20%20%20aiMessages.forEach(msg%20=%3E%20{%20%20%20%20%20%20%20%20%20%20%20%20%20msg.style.backgroundColor%20=%20theme.menuBg;%20%20%20%20%20%20%20%20%20%20%20%20%20msg.style.color%20=%20theme.text%20||%20'#d1d5db';%20%20%20%20%20%20%20%20%20});%20%20%20%20%20%20%20%20%20%20const%20menuButtons%20=%20widget.querySelectorAll('.menu-button');%20%20%20%20%20%20%20%20%20menuButtons.forEach(btn%20=%3E%20{%20%20%20%20%20%20%20%20%20%20%20%20%20btn.style.color%20=%20theme.text%20||%20'#9ca3af';%20%20%20%20%20%20%20%20%20});%20%20%20%20%20%20%20%20%20%20const%20dropdowns%20=%20widget.querySelectorAll('.dropdown-content');%20%20%20%20%20%20%20%20%20dropdowns.forEach(dd%20=%3E%20{%20%20%20%20%20%20%20%20%20%20%20%20%20dd.style.backgroundColor%20=%20theme.bg;%20%20%20%20%20%20%20%20%20%20%20%20%20if%20(color%20===%20'white')%20{%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20dd.style.border%20=%20'1px%20solid%20#d1d5db';%20%20%20%20%20%20%20%20%20%20%20%20%20}%20%20%20%20%20%20%20%20%20});%20%20%20%20%20%20%20%20%20%20const%20dropdownItems%20=%20widget.querySelectorAll('.dropdown-item');%20%20%20%20%20%20%20%20%20dropdownItems.forEach(item%20=%3E%20{%20%20%20%20%20%20%20%20%20%20%20%20%20item.style.color%20=%20theme.text%20||%20'#d1d5db';%20%20%20%20%20%20%20%20%20});%20%20%20%20%20};%20%20%20%20%20%20const%20css%20=%20%60%20.widget-container{width:90vw;max-width:400px;height:70vh;max-height:700px;box-shadow:0%2010px%2025px%20rgba(0,0,0,0.3);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;z-index:99999;position:fixed;bottom:16px;right:16px;font-family:'Inter',sans-serif;transition:all%200.3s}%20.chat-input-container{display:flex;padding:8px;transition:background-color%200.3s}%20.chat-messages{flex-grow:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column}%20.message{margin-bottom:8px;border-radius:8px;padding:8px%2012px;max-width:85%}%20.user-message{color:white;margin-left:auto}%20.ai-message{margin-right:auto;transition:all%200.3s}%20.menu-bar{height:50px;display:flex;justify-content:space-around;align-items:center;border-top:1px%20solid%20rgba(255,255,255,0.1);border-radius:0%200%2012px%2012px;transition:background-color%200.3s}%20.menu-button{position:relative;cursor:pointer;padding:0%2010px;transition:color%200.2s}%20.menu-button:hover{opacity:0.8}%20.dropdown-content{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);box-shadow:0%20-4px%2010px%20rgba(0,0,0,0.3);border-radius:8px%208px%200%200;min-width:150px;opacity:0;visibility:hidden;transition:opacity%200.2s,visibility%200.2s;padding:8px%200}%20.menu-button:hover%20.dropdown-content{opacity:1;visibility:visible}%20.dropdown-item{padding:8px%2012px;cursor:pointer;white-space:nowrap;transition:all%200.3s}%20.dropdown-item:hover{opacity:0.8}%20#chat-input{flex-grow:1;padding:8px;border-radius:8px%200%200%208px;border:none;transition:all%200.3s}%20#send-btn{padding:8px%2016px;color:white;border-radius:0%208px%208px%200;border:none;transition:background-color%200.3s}%20.header{display:flex;justify-content:space-between;align-items:center;padding:12px;color:white;font-weight:bold;border-radius:12px%2012px%200%200;cursor:grab;transition:background-color%200.3s}%20.color-picker-item{display:flex;align-items:center;gap:8px}%20.color-dot{width:20px;height:20px;border-radius:50%;border:2px%20solid%20rgba(255,255,255,0.3)}%20%20%20%20%20%60;%20%20%20%20%20%20const%20style%20=%20document.createElement('style');%20%20%20%20%20style.innerHTML%20=%20css;%20%20%20%20%20document.head.appendChild(style);%20%20%20%20%20%20const%20widgetContainer%20=%20document.createElement('div');%20%20%20%20%20widgetContainer.id%20=%20'noobs-gui-widget';%20%20%20%20%20widgetContainer.className%20=%20'widget-container';%20%20%20%20%20%20const%20createSvg%20=%20(d,%20text)%20=%3E%20{%20%20%20%20%20%20%20%20%20const%20xmlns%20=%20'http://www.w3.org/2000/svg';%20%20%20%20%20%20%20%20%20const%20svg%20=%20document.createElementNS(xmlns,%20'svg');%20%20%20%20%20%20%20%20%20svg.setAttribute('class',%20'w-6%20h-6%20inline-block');%20%20%20%20%20%20%20%20%20svg.setAttribute('fill',%20'none');%20%20%20%20%20%20%20%20%20svg.setAttribute('stroke',%20'currentColor');%20%20%20%20%20%20%20%20%20svg.setAttribute('viewBox',%20'0%200%2024%2024');%20%20%20%20%20%20%20%20%20svg.setAttribute('style',%20'width:24px;height:24px;');%20%20%20%20%20%20%20%20%20%20const%20paths%20=%20Array.isArray(d)%20?%20d%20:%20[d];%20%20%20%20%20%20%20%20%20paths.forEach(pathD%20=%3E%20{%20%20%20%20%20%20%20%20%20%20%20%20%20const%20path%20=%20document.createElementNS(xmlns,%20'path');%20%20%20%20%20%20%20%20%20%20%20%20%20path.setAttribute('stroke-linecap',%20'round');%20%20%20%20%20%20%20%20%20%20%20%20%20path.setAttribute('stroke-linejoin',%20'round');%20%20%20%20%20%20%20%20%20%20%20%20%20path.setAttribute('stroke-width',%20'2');%20%20%20%20%20%20%20%20%20%20%20%20%20path.setAttribute('d',%20pathD);%20%20%20%20%20%20%20%20%20%20%20%20%20svg.appendChild(path);%20%20%20%20%20%20%20%20%20});%20%20%20%20%20%20%20%20%20%20const%20span%20=%20document.createElement('span');%20%20%20%20%20%20%20%20%20span.style.cssText%20=%20'font-size:%2010px;%20display:%20block;%20margin-top:%20-4px;';%20%20%20%20%20%20%20%20%20span.textContent%20=%20text;%20%20%20%20%20%20%20%20%20return%20{%20icon:%20svg,%20text:%20span%20};%20%20%20%20%20};%20%20%20%20%20%20const%20createMenuButton%20=%20(id,%20iconDs,%20text,%20isLink%20=%20false,%20href%20=%20'')%20=%3E%20{%20%20%20%20%20%20%20%20%20const%20btn%20=%20isLink%20?%20document.createElement('a')%20:%20document.createElement('div');%20%20%20%20%20%20%20%20%20btn.id%20=%20id;%20%20%20%20%20%20%20%20%20btn.className%20=%20'menu-button';%20%20%20%20%20%20%20%20%20if%20(isLink)%20{%20%20%20%20%20%20%20%20%20%20%20%20%20btn.href%20=%20href;%20%20%20%20%20%20%20%20%20%20%20%20%20btn.target%20=%20'_blank';%20%20%20%20%20%20%20%20%20}%20%20%20%20%20%20%20%20%20const%20{%20icon,%20text:%20span%20}%20=%20createSvg(iconDs,%20text);%20%20%20%20%20%20%20%20%20btn.appendChild(icon);%20%20%20%20%20%20%20%20%20btn.appendChild(span);%20%20%20%20%20%20%20%20%20return%20btn;%20%20%20%20%20};%20%20%20%20%20%20const%20header%20=%20document.createElement('div');%20%20%20%20%20header.className%20=%20'header';%20%20%20%20%20%20const%20titleSpan%20=%20document.createElement('span');%20%20%20%20%20titleSpan.className%20=%20'text-lg';%20%20%20%20%20titleSpan.textContent%20=%20'Noobs%20Gui';%20%20%20%20%20%20const%20{%20icon:%20headerIcon%20}%20=%20createSvg(defaultIconPath,%20'');%20%20%20%20%20headerIcon.setAttribute('stroke-width',%20'1.5');%20%20%20%20%20headerIcon.style.cssText%20=%20'width:%2020px;%20height:%2020px;%20margin-right:%208px;%20color:%20white;';%20%20%20%20%20%20const%20titleGroup%20=%20document.createElement('div');%20%20%20%20%20titleGroup.style.display%20=%20'flex';%20%20%20%20%20titleGroup.style.alignItems%20=%20'center';%20%20%20%20%20titleGroup.appendChild(headerIcon);%20%20%20%20%20titleGroup.appendChild(titleSpan);%20%20%20%20%20%20header.appendChild(titleGroup);%20%20%20%20%20%20const%20closeBtn%20=%20document.createElement('button');%20%20%20%20%20closeBtn.id%20=%20'close-widget-btn';%20%20%20%20%20closeBtn.textContent%20=%20'%C3%97';%20%20%20%20%20closeBtn.style.cssText%20=%20'font-size:%201.5rem;%20background:%20none;%20border:%20none;%20color:%20white;%20cursor:%20pointer;%20line-height:%201;';%20%20%20%20%20header.appendChild(closeBtn);%20%20%20%20%20%20widgetContainer.appendChild(header);%20%20%20%20%20%20const%20messageContainer%20=%20document.createElement('div');%20%20%20%20%20messageContainer.id%20=%20'chat-messages';%20%20%20%20%20messageContainer.className%20=%20'chat-messages';%20%20%20%20%20widgetContainer.appendChild(messageContainer);%20%20%20%20%20%20const%20inputContainer%20=%20document.createElement('div');%20%20%20%20%20inputContainer.className%20=%20'chat-input-container';%20%20%20%20%20%20const%20chatInput%20=%20document.createElement('input');%20%20%20%20%20chatInput.type%20=%20'text';%20%20%20%20%20chatInput.id%20=%20'chat-input';%20%20%20%20%20chatInput.placeholder%20=%20'Ask%20me%20anything...';%20%20%20%20%20inputContainer.appendChild(chatInput);%20%20%20%20%20%20const%20sendBtn%20=%20document.createElement('button');%20%20%20%20%20sendBtn.id%20=%20'send-btn';%20%20%20%20%20sendBtn.textContent%20=%20'Send';%20%20%20%20%20inputContainer.appendChild(sendBtn);%20%20%20%20%20%20widgetContainer.appendChild(inputContainer);%20%20%20%20%20%20const%20menuBar%20=%20document.createElement('div');%20%20%20%20%20menuBar.className%20=%20'menu-bar';%20%20%20%20%20%20const%20gamesMenu%20=%20createMenuButton('games-menu',%20['M11%203.055A9.001%209.001%200%201020.945%2013H11V3.055z',%20'M20.488%209H15V3.512A9.025%209.025%200%200120.488%209z'],%20'Games');%20%20%20%20%20const%20searchMenu%20=%20createMenuButton('search-menu',%20'M21%2021l-6-6m2-5a7%207%200%2011-14%200%207%207%200%200114%200z',%20'Search');%20%20%20%20%20const%20settingsMenu%20=%20createMenuButton('settings-menu',%20'M10.325%204.317c.426-1.756%202.924-1.756%203.35%200a1.724%201.724%200%20002.573%201.066c1.543-.94%203.31.826%202.37%202.37a1.724%201.724%200%20001.065%202.572c1.756.426%201.756%202.924%200%203.35a1.724%201.724%200%2000-1.066%202.573c.94%201.543-.826%203.31-2.37%202.37a1.724%201.724%200%2000-2.572%201.065c-.426%201.756-2.924%201.756-3.35%200a1.724%201.724%200%2000-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724%201.724%200%2000-1.065-2.572c-1.756-.426-1.756-2.924%200-3.35a1.724%201.724%200%20001.066-2.573c-.94-1.543.826-3.31%202.37-2.37a1.724%201.724%200%20002.572-1.065zM12%2016a4%204%200%20100-8%204%204%200%20000%208z',%20'Settings');%20%20%20%20%20const%20discordMenu%20=%20createMenuButton('discord-link',%20['M17%208h2a2%202%200%20012%202v6a2%202%200%2001-2%202h-2v4l-4-4H9a1.994%201.994%200%2001-1.414-.586m0%200L11%2014h4a2%202%200%20002-2V6a2%202%200%2000-2-2H5a2%202%200%2000-2%202v6a2%202%200%20002%202h2v4l.325-.325z'],%20'Discord',%20true,%20discordUrl);%20%20%20%20%20%20menuBar.appendChild(gamesMenu);%20%20%20%20%20menuBar.appendChild(searchMenu);%20%20%20%20%20menuBar.appendChild(settingsMenu);%20%20%20%20%20menuBar.appendChild(discordMenu);%20%20%20%20%20widgetContainer.appendChild(menuBar);%20%20%20%20%20%20document.body.appendChild(widgetContainer);%20%20%20%20%20loadMathJax();%20%20%20%20%20%20function%20addMessage(text,%20sender,%20isTemporary%20=%20false)%20{%20%20%20%20%20%20%20%20%20const%20msgDiv%20=%20document.createElement('div');%20%20%20%20%20%20%20%20%20msgDiv.className%20=%20%60message%20${sender}-message%60;%20%20%20%20%20%20%20%20%20msgDiv.style.whiteSpace%20=%20'pre-wrap';%20%20%20%20%20%20%20%20%20msgDiv.innerHTML%20=%20renderMarkdown(text);%20%20%20%20%20%20%20%20%20%20if%20(sender%20===%20'user')%20{%20%20%20%20%20%20%20%20%20%20%20%20%20const%20theme%20=%20colorThemes[currentColor];%20%20%20%20%20%20%20%20%20%20%20%20%20msgDiv.style.backgroundColor%20=%20theme.primary;%20%20%20%20%20%20%20%20%20}%20%20%20%20%20%20%20%20%20%20if%20(isTemporary)%20{%20%20%20%20%20%20%20%20%20%20%20%20%20msgDiv.id%20=%20'temp-ai-message-'%20+%20Date.now();%20%20%20%20%20%20%20%20%20}%20%20%20%20%20%20%20%20%20%20messageContainer.appendChild(msgDiv);%20%20%20%20%20%20%20%20%20messageContainer.scrollTop%20=%20messageContainer.scrollHeight;%20%20%20%20%20%20%20%20%20%20if%20(window.MathJax%20&&%20window.MathJax.typesetPromise)%20{%20%20%20%20%20%20%20%20%20%20%20%20%20window.MathJax.typesetPromise([msgDiv]).catch((err)%20=%3E%20console.error('MathJax%20error:',%20err));%20%20%20%20%20%20%20%20%20}%20%20%20%20%20%20%20%20%20%20return%20msgDiv;%20%20%20%20%20}%20%20%20%20%20%20function%20updateMessage(element,%20newText)%20{%20%20%20%20%20%20%20%20%20element.innerHTML%20=%20renderMarkdown(newText);%20%20%20%20%20%20%20%20%20messageContainer.scrollTop%20=%20messageContainer.scrollHeight;%20%20%20%20%20%20%20%20%20%20if%20(window.MathJax%20&&%20window.MathJax.typesetPromise)%20{%20%20%20%20%20%20%20%20%20%20%20%20%20window.MathJax.typesetPromise([element]).catch((err)%20=%3E%20console.error('MathJax%20error:',%20err));%20%20%20%20%20%20%20%20%20}%20%20%20%20%20}%20%20%20%20%20%20addMessage(%22Hello!%20I'm%20Noobs%20AI.%20Ask%20me%20a%20question%20to%20get%20started.%22,%20'ai');%20%20%20%20%20%20sendBtn.addEventListener('click',%20()%20=%3E%20{%20%20%20%20%20%20%20%20%20const%20prompt%20=%20chatInput.value.trim();%20%20%20%20%20%20%20%20%20if%20(prompt%20&&%20!isGenerating)%20{%20%20%20%20%20%20%20%20%20%20%20%20%20generateContent(prompt);%20%20%20%20%20%20%20%20%20%20%20%20%20chatInput.value%20=%20'';%20%20%20%20%20%20%20%20%20}%20%20%20%20%20});%20%20%20%20%20%20chatInput.addEventListener('keypress',%20(e)%20=%3E%20{%20%20%20%20%20%20%20%20%20if%20(e.key%20===%20'Enter'%20&&%20!isGenerating)%20{%20%20%20%20%20%20%20%20%20%20%20%20%20sendBtn.click();%20%20%20%20%20%20%20%20%20}%20%20%20%20%20});%20%20%20%20%20%20const%20gamesDropdown%20=%20document.createElement('div');%20%20%20%20%20gamesDropdown.id%20=%20'games-dropdown';%20%20%20%20%20gamesDropdown.className%20=%20'dropdown-content';%20%20%20%20%20gamesMenu.appendChild(gamesDropdown);%20%20%20%20%20%20games.forEach(game%20=%3E%20{%20%20%20%20%20%20%20%20%20const%20item%20=%20document.createElement('div');%20%20%20%20%20%20%20%20%20item.className%20=%20'dropdown-item';%20%20%20%20%20%20%20%20%20item.textContent%20=%20game.name;%20%20%20%20%20%20%20%20%20item.onclick%20=%20()%20=%3E%20{%20window.open(game.url,%20'_blank');%20};%20%20%20%20%20%20%20%20%20gamesDropdown.appendChild(item);%20%20%20%20%20});%20%20%20%20%20%20%20%20%20%20const%20settingsDropdown%20=%20document.createElement('div');%20%20%20%20%20settingsDropdown.id%20=%20'settings-dropdown';%20%20%20%20%20settingsDropdown.className%20=%20'dropdown-content';%20%20%20%20%20settingsMenu.appendChild(settingsDropdown);%20%20%20%20%20%20const%20colorOptions%20=%20[%20%20%20%20%20%20%20%20%20{%20name:%20'Blue',%20value:%20'blue',%20color:%20'#4f46e5'%20},%20%20%20%20%20%20%20%20%20{%20name:%20'Orange',%20value:%20'orange',%20color:%20'#ea580c'%20},%20%20%20%20%20%20%20%20%20{%20name:%20'Red',%20value:%20'red',%20color:%20'#dc2626'%20},%20%20%20%20%20%20%20%20%20{%20name:%20'White',%20value:%20'white',%20color:%20'#ffffff'%20},%20%20%20%20%20%20%20%20%20{%20name:%20'Black',%20value:%20'black',%20color:%20'#000000'%20}%20%20%20%20%20];%20%20%20%20%20%20colorOptions.forEach(option%20=%3E%20{%20%20%20%20%20%20%20%20%20const%20item%20=%20document.createElement('div');%20%20%20%20%20%20%20%20%20item.className%20=%20'dropdown-item%20color-picker-item';%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20colorDot%20=%20document.createElement('span');%20%20%20%20%20%20%20%20%20colorDot.className%20=%20'color-dot';%20%20%20%20%20%20%20%20%20colorDot.style.backgroundColor%20=%20option.color;%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20label%20=%20document.createElement('span');%20%20%20%20%20%20%20%20%20label.textContent%20=%20option.name;%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20item.appendChild(colorDot);%20%20%20%20%20%20%20%20%20item.appendChild(label);%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20item.onclick%20=%20(e)%20=%3E%20{%20%20%20%20%20%20%20%20%20%20%20%20%20e.stopPropagation();%20%20%20%20%20%20%20%20%20%20%20%20%20currentColor%20=%20option.value;%20%20%20%20%20%20%20%20%20%20%20%20%20localStorage.setItem('noobsGuiColor',%20currentColor);%20%20%20%20%20%20%20%20%20%20%20%20%20applyColorTheme(currentColor);%20%20%20%20%20%20%20%20%20};%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20settingsDropdown.appendChild(item);%20%20%20%20%20});%20%20%20%20%20%20applyColorTheme(currentColor);%20%20%20%20%20%20searchMenu.addEventListener('click',%20()%20=%3E%20{%20%20%20%20%20%20%20%20%20const%20newWindow%20=%20window.open('about:blank',%20'_blank');%20%20%20%20%20%20%20%20%20if%20(newWindow)%20{%20%20%20%20%20%20%20%20%20%20%20%20%20const%20htmlContent%20=%20%60%20%3C!DOCTYPE%20html%3E%20%3Chtml%3E%20%3Chead%3E%20%3Ctitle%3EProxy%20Search%20Launcher%3C/title%3E%20%3Cstyle%3E%20body{font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;background-color:#1f2937;color:white}%20.card{background-color:#374151;padding:40px;border-radius:12px;box-shadow:0%204px%2015px%20rgba(0,0,0,.4);text-align:center}%20h1{margin-bottom:20px;font-size:1.5em}%20a{color:#818cf8;text-decoration:none;font-weight:bold}%20a:hover{text-decoration:underline}%20p{margin-top:20px;color:#9ca3af}%20%3C/style%3E%20%3C/head%3E%20%3Cbody%3E%20%3Cdiv%20class=%22card%22%3E%20%20%20%20%20%3Ch1%3EProxy%20Search%20Placeholder%3C/h1%3E%20%20%20%20%20%3Cp%3EThis%20button%20simulates%20opening%20a%20proxy%20like%20Ultraviolet/Interstellar.%3C/p%3E%20%20%20%20%20%3Ca%20href=%22${proxyPlaceholderUrl}%22%20target=%22_top%22%20style=%22display:block;padding:10px%2020px;background-color:#4f46e5;border-radius:8px;margin-top:20px;%22%3ELaunch%20Proxy%20Search%20(Placeholder)%3C/a%3E%20%20%20%20%20%3Cp%3EPlease%20replace%20the%20link%20with%20your%20actual%20proxy%20URL.%3C/p%3E%20%3C/div%3E%20%3C/body%3E%20%3C/html%3E%60;%20%20%20%20%20%20%20%20%20%20%20%20%20newWindow.document.write(htmlContent);%20%20%20%20%20%20%20%20%20%20%20%20%20newWindow.document.close();%20%20%20%20%20%20%20%20%20}%20%20%20%20%20});%20%20%20%20%20%20closeBtn.addEventListener('click',%20()%20=%3E%20{%20%20%20%20%20%20%20%20%20widgetContainer.style.display%20=%20'none';%20%20%20%20%20});%20%20%20%20%20%20let%20isDragging%20=%20false;%20%20%20%20%20let%20offsetX,%20offsetY;%20%20%20%20%20let%20initialPositionSet%20=%20false;%20%20%20%20%20%20const%20setInitialPosition%20=%20()%20=%3E%20{%20%20%20%20%20%20%20%20%20if%20(!initialPositionSet)%20{%20%20%20%20%20%20%20%20%20%20%20%20%20const%20viewportWidth%20=%20window.innerWidth;%20%20%20%20%20%20%20%20%20%20%20%20%20const%20viewportHeight%20=%20window.innerHeight;%20%20%20%20%20%20%20%20%20%20%20%20%20const%20widgetWidth%20=%20widgetContainer.offsetWidth;%20%20%20%20%20%20%20%20%20%20%20%20%20const%20widgetHeight%20=%20widgetContainer.offsetHeight;%20%20%20%20%20%20%20%20%20%20%20%20%20%20if%20(widgetContainer.style.position%20===%20'fixed')%20{%20%20%20%20%20%20%20%20%20%20%20%20%20}%20else%20{%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20widgetContainer.style.position%20=%20'fixed';%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20widgetContainer.style.left%20=%20(viewportWidth%20/%202%20-%20widgetWidth%20/%202)%20+%20'px';%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20widgetContainer.style.top%20=%20(viewportHeight%20/%202%20-%20widgetHeight%20/%202)%20+%20'px';%20%20%20%20%20%20%20%20%20%20%20%20%20}%20%20%20%20%20%20%20%20%20%20%20%20%20initialPositionSet%20=%20true;%20%20%20%20%20%20%20%20%20}%20%20%20%20%20};%20%20%20%20%20%20%20%20%20%20setInitialPosition();%20%20%20%20%20window.addEventListener('resize',%20setInitialPosition);%20%20%20%20%20%20header.addEventListener('mousedown',%20(e)%20=%3E%20{%20%20%20%20%20%20%20%20%20if%20(e.button%20!==%200)%20return;%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20isDragging%20=%20true;%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20if%20(widgetContainer.style.position%20!==%20'fixed')%20{%20%20%20%20%20%20%20%20%20%20%20%20%20widgetContainer.style.position%20=%20'fixed';%20%20%20%20%20%20%20%20%20}%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20rect%20=%20widgetContainer.getBoundingClientRect();%20%20%20%20%20%20%20%20%20offsetX%20=%20e.clientX%20-%20rect.left;%20%20%20%20%20%20%20%20%20offsetY%20=%20e.clientY%20-%20rect.top;%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20widgetContainer.style.right%20=%20'auto';%20%20%20%20%20%20%20%20%20widgetContainer.style.bottom%20=%20'auto';%20%20%20%20%20%20%20%20%20%20widgetContainer.style.cursor%20=%20'grabbing';%20%20%20%20%20%20%20%20%20e.preventDefault();%20%20%20%20%20});%20%20%20%20%20%20document.addEventListener('mousemove',%20(e)%20=%3E%20{%20%20%20%20%20%20%20%20%20if%20(!isDragging)%20return;%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20let%20newX%20=%20e.clientX%20-%20offsetX;%20%20%20%20%20%20%20%20%20let%20newY%20=%20e.clientY%20-%20offsetY;%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20maxLeft%20=%20window.innerWidth%20-%20widgetContainer.offsetWidth;%20%20%20%20%20%20%20%20%20const%20maxTop%20=%20window.innerHeight%20-%20widgetContainer.offsetHeight;%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20newX%20=%20Math.max(0,%20Math.min(newX,%20maxLeft));%20%20%20%20%20%20%20%20%20newY%20=%20Math.max(0,%20Math.min(newY,%20maxTop));%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20widgetContainer.style.left%20=%20newX%20+%20'px';%20%20%20%20%20%20%20%20%20widgetContainer.style.top%20=%20newY%20+%20'px';%20%20%20%20%20});%20%20%20%20%20%20document.addEventListener('mouseup',%20()%20=%3E%20{%20%20%20%20%20%20%20%20%20isDragging%20=%20false;%20%20%20%20%20%20%20%20%20widgetContainer.style.cursor%20=%20'grab';%20%20%20%20%20});%20%20%20%20%20%20%20%20%20%20header.addEventListener('touchstart',%20(e)%20=%3E%20{%20%20%20%20%20%20%20%20%20const%20touch%20=%20e.touches[0];%20%20%20%20%20%20%20%20%20isDragging%20=%20true;%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20if%20(widgetContainer.style.position%20!==%20'fixed')%20{%20%20%20%20%20%20%20%20%20%20%20%20%20widgetContainer.style.position%20=%20'fixed';%20%20%20%20%20%20%20%20%20}%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20rect%20=%20widgetContainer.getBoundingClientRect();%20%20%20%20%20%20%20%20%20offsetX%20=%20touch.clientX%20-%20rect.left;%20%20%20%20%20%20%20%20%20offsetY%20=%20touch.clientY%20-%20rect.top;%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20widgetContainer.style.right%20=%20'auto';%20%20%20%20%20%20%20%20%20widgetContainer.style.bottom%20=%20'auto';%20%20%20%20%20%20%20%20%20e.preventDefault();%20%20%20%20%20});%20%20%20%20%20%20document.addEventListener('touchmove',%20(e)%20=%3E%20{%20%20%20%20%20%20%20%20%20if%20(!isDragging)%20return;%20%20%20%20%20%20%20%20%20const%20touch%20=%20e.touches[0];%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20let%20newX%20=%20touch.clientX%20-%20offsetX;%20%20%20%20%20%20%20%20%20let%20newY%20=%20touch.clientY%20-%20offsetY;%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20const%20maxLeft%20=%20window.innerWidth%20-%20widgetContainer.offsetWidth;%20%20%20%20%20%20%20%20%20const%20maxTop%20=%20window.innerHeight%20-%20widgetContainer.offsetHeight;%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20newX%20=%20Math.max(0,%20Math.min(newX,%20maxLeft));%20%20%20%20%20%20%20%20%20newY%20=%20Math.max(0,%20Math.min(newY,%20maxTop));%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20widgetContainer.style.left%20=%20newX%20+%20'px';%20%20%20%20%20%20%20%20%20widgetContainer.style.top%20=%20newY%20+%20'px';%20%20%20%20%20%20%20%20%20e.preventDefault();%20%20%20%20%20});%20%20%20%20%20%20document.addEventListener('touchend',%20()%20=%3E%20{%20%20%20%20%20%20%20%20%20isDragging%20=%20false;%20%20%20%20%20});%20%20})();
+/* ===== Noobs GUI — Pretty / Indented Version =====
+   - Dark-themed AI message boxes
+   - Monochrome Discord logo
+   - Monochrome Controller icon
+   - Keep original functionality (API proxy, backoff, MathJax, draggable, themes)
+*/
+
+(function () {
+  // -------------------------
+  // Configuration
+  // -------------------------
+  const apiUrl = "https://twilight-hill-3941.blueboltgamingyt.workers.dev";
+  const discordUrl = "https://discord.gg/placeholder_invite";
+  const proxyPlaceholderUrl = "https://www.google.com/search?q=uv+proxy+web+search+placeholder";
+
+  // Preconfigured games
+  const games = [
+    { name: "Tetris", url: "https://www.google.com/search?q=online+tetris+game" },
+    { name: "Snake", url: "https://www.google.com/search?q=online+snake+game" },
+    { name: "2048", url: "https://www.google.com/search?q=online+2048+game" },
+    { name: "Minesweeper", url: "https://www.google.com/search?q=online+minesweeper+game" }
+  ];
+
+  // Color themes (keeps original theme shapes)
+  const colorThemes = {
+    blue: { primary: "#4f46e5", secondary: "#818cf8", bg: "#1f2937", inputBg: "#4b5563", menuBg: "#374151", text: "#d1d5db" },
+    orange: { primary: "#ea580c", secondary: "#fb923c", bg: "#1c1917", inputBg: "#44403c", menuBg: "#292524", text: "#e7e3df" },
+    red: { primary: "#dc2626", secondary: "#f87171", bg: "#1f1f1f", inputBg: "#3f3f3f", menuBg: "#2a2a2a", text: "#e6e6e6" },
+    white: { primary: "#059669", secondary: "#34d399", bg: "#f9fafb", inputBg: "#ffffff", menuBg: "#f3f4f6", text: "#1f2937" },
+    black: { primary: "#6366f1", secondary: "#a5b4fc", bg: "#000000", inputBg: "#1a1a1a", menuBg: "#0a0a0a", text: "#d1d5db" }
+  };
+
+  let isGenerating = false;
+  let currentColor = localStorage.getItem("noobsGuiColor") || "blue";
+
+  // -------------------------
+  // Utility: Fetch with backoff
+  // -------------------------
+  async function fetchWithBackoff(url, options, maxRetries = 5) {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const response = await fetch(url, options);
+        // If not 429 retry logic is bypassed and response returned.
+        if (response.status !== 429) return response;
+      } catch (err) {
+        console.error("Fetch error (retrying):", err);
+      }
+      const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+      await new Promise((res) => setTimeout(res, delay));
+    }
+    throw new Error("API call failed after multiple retries.");
+  }
+
+  // -------------------------
+  // Inject CSS (widget + dark message boxes)
+  // -------------------------
+  const css = `
+    .noobs-widget {
+      width: 90vw;
+      max-width: 420px;
+      height: 70vh;
+      max-height: 720px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      z-index: 9999999;
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      transition: all 0.25s;
+    }
+
+    .noobs-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      color: white;
+      font-weight: 700;
+      border-radius: 12px 12px 0 0;
+      cursor: grab;
+    }
+
+    .noobs-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .noobs-title svg {
+      width: 20px;
+      height: 20px;
+      color: white;
+    }
+
+    .noobs-messages {
+      flex-grow: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    /* Message styles */
+    .message {
+      margin-bottom: 8px;
+      border-radius: 12px;
+      padding: 10px 12px;
+      max-width: 85%;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* User messages: aligned to right, primary color background */
+    .user-message {
+      margin-left: auto;
+      color: white;
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+    }
+
+    /* AI messages: dark-themed boxes (requested) */
+    .ai-message {
+      margin-right: auto;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.04);
+      color: #d1d5db;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+    }
+
+    .ai-message.temporary {
+      opacity: 0.85;
+      font-style: italic;
+    }
+
+    .noobs-input-row {
+      display: flex;
+      gap: 8px;
+      padding: 10px;
+      align-items: center;
+      border-top: 1px solid rgba(255,255,255,0.03);
+    }
+
+    #chat-input {
+      flex-grow: 1;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      background: rgba(0,0,0,0.35);
+      color: #e5e7eb;
+      font-size: 14px;
+      min-height: 38px;
+    }
+
+    #send-btn {
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .menu-bar {
+      height: 52px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border-top: 1px solid rgba(255,255,255,0.03);
+      background: rgba(0,0,0,0.08);
+    }
+
+    .menu-button {
+      position: relative;
+      cursor: pointer;
+      padding: 6px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: #d1d5db;
+      font-size: 11px;
+      user-select: none;
+    }
+
+    .menu-button svg {
+      width: 20px;
+      height: 20px;
+      display: block;
+      color: currentColor; /* Monochrome icon uses currentColor */
+    }
+
+    .dropdown-content {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 -6px 16px rgba(0,0,0,0.4);
+      border-radius: 8px 8px 0 0;
+      min-width: 160px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.18s ease, visibility 0.18s ease;
+      padding: 6px 0;
+      background: rgba(0,0,0,0.9);
+      border: 1px solid rgba(255,255,255,0.03);
+      z-index: 10000000;
+    }
+
+    .menu-button:hover .dropdown-content {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .dropdown-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      color: #d1d5db;
+      font-size: 13px;
+    }
+
+    .dropdown-item:hover {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .color-picker-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .color-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.12);
+    }
+
+    /* small helpers */
+    .text-lg { font-size: 1.05rem; }
+    button:focus, input:focus { outline: none; }
+  `;
+
+  const styleEl = document.createElement("style");
+  styleEl.innerHTML = css;
+  document.head.appendChild(styleEl);
+
+  // -------------------------
+  // Helper: create SVG elements for icons (monochrome / currentColor)
+  // Accepts array of path strings or single path
+  // -------------------------
+  function createSvg(paths, viewBox = "0 0 24 24") {
+    const xmlns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(xmlns, "svg");
+    svg.setAttribute("viewBox", viewBox);
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "1.5");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.style.width = "20px";
+    svg.style.height = "20px";
+
+    const pathsArray = Array.isArray(paths) ? paths : [paths];
+    pathsArray.forEach((d) => {
+      const path = document.createElementNS(xmlns, "path");
+      path.setAttribute("d", d);
+      svg.appendChild(path);
+    });
+    return svg;
+  }
+
+  // Monochrome Discord logo (glyph only)
+  function discordSvg() {
+    // This is a simplified monochrome glyph path collection
+    const paths = [
+      "M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.844-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.0371 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C2.95 9.0458 2.438 13.579 3.052 17.982c.015.0702.064.1462.127.1842 2.052.94 4.05 1.49 5.992 1.861.6.11 1.154-.26 1.285-.873.117-.55.205-1.128.297-1.672-2.384-.548-4.63-1.36-4.63-1.36-.314-.13-.64-.33-.92-.57 0 0-.07-.06-.03-.14.37-.56.66-1.15.9-1.76 3.01.87 6.27.87 9.28 0 .24.61.53 1.2.9 1.76.04.08-.03.14-.03.14-.28.24-.6.44-.92.57 0 0-2.25.81-4.63 1.36.09.47.18 1.01.29 1.66.13.62.69.99 1.29.87 1.94-.37 3.94-.92 6-1.86.064-.038.114-.114.13-.184.62-4.402.11-8.935-2.906-13.586a.061.061 0 00-.031-.028z"
+    ];
+    return createSvg(paths, "0 0 24 24");
+  }
+
+  // Monochrome controller icon
+  function controllerSvg() {
+    const paths = [
+      "M6 10.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z",
+      "M18 10.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z",
+      "M21 13c-.8 4.5-3.5 6-7 6s-6.2-1.5-7-6C6 6 3 6 3 6s1.6-2 5-2 7 0 9 2c2 2 4 2 4 2s-1 3-3 7z"
+    ];
+    // We will use combined paths to create a stylized controller glyph
+    return createSvg(paths, "0 0 24 24");
+  }
+
+  // Default header icon (simple circle / info)
+  function defaultGlyph() {
+    return createSvg(["M12 2a10 10 0 100 20 10 10 0 000-20z", "M11 10h2v6h-2z", "M11 7h2v2h-2z"], "0 0 24 24");
+  }
+
+  // -------------------------
+  // Build Widget DOM
+  // -------------------------
+  // If widget already present toggle display
+  if (document.getElementById("noobs-gui-widget")) {
+    const w = document.getElementById("noobs-gui-widget");
+    w.style.display = w.style.display === "none" ? "flex" : "none";
+    return;
+  }
+
+  const widget = document.createElement("div");
+  widget.id = "noobs-gui-widget";
+  widget.className = "noobs-widget";
+
+  // Header
+  const header = document.createElement("div");
+  header.className = "noobs-header";
+
+  const titleGroup = document.createElement("div");
+  titleGroup.className = "noobs-title";
+
+  const glyph = defaultGlyph();
+  glyph.style.color = "#ffffff";
+  titleGroup.appendChild(glyph);
+
+  const title = document.createElement("span");
+  title.className = "text-lg";
+  title.textContent = "Noobs Gui";
+  titleGroup.appendChild(title);
+  header.appendChild(titleGroup);
+
+  const closeBtn = document.createElement("button");
+  closeBtn.id = "close-widget-btn";
+  closeBtn.innerHTML = "✕";
+  closeBtn.style.background = "none";
+  closeBtn.style.border = "none";
+  closeBtn.style.color = "white";
+  closeBtn.style.cursor = "pointer";
+  closeBtn.style.fontSize = "1.25rem";
+  header.appendChild(closeBtn);
+
+  widget.appendChild(header);
+
+  // Messages container
+  const messages = document.createElement("div");
+  messages.id = "chat-messages";
+  messages.className = "noobs-messages";
+  widget.appendChild(messages);
+
+  // Input row
+  const inputRow = document.createElement("div");
+  inputRow.className = "noobs-input-row";
+
+  const chatInput = document.createElement("input");
+  chatInput.type = "text";
+  chatInput.id = "chat-input";
+  chatInput.placeholder = "Ask me anything...";
+  inputRow.appendChild(chatInput);
+
+  const sendBtn = document.createElement("button");
+  sendBtn.id = "send-btn";
+  sendBtn.textContent = "Send";
+  inputRow.appendChild(sendBtn);
+
+  widget.appendChild(inputRow);
+
+  // Menu bar
+  const menuBar = document.createElement("div");
+  menuBar.className = "menu-bar";
+
+  // Helper to create menu buttons (can be link or div)
+  function createMenuButton(id, svgEl, label, isLink = false, href = "") {
+    const btn = isLink ? document.createElement("a") : document.createElement("div");
+    btn.className = "menu-button";
+    btn.id = id;
+    if (isLink) {
+      btn.href = href;
+      btn.target = "_blank";
+      btn.rel = "noreferrer noopener";
+    }
+    // icon
+    svgEl.style.display = "block";
+    svgEl.style.margin = "0 auto";
+    svgEl.style.color = "#d1d5db"; // monochrome look
+    btn.appendChild(svgEl);
+
+    // text label
+    const lbl = document.createElement("span");
+    lbl.textContent = label;
+    btn.appendChild(lbl);
+
+    return btn;
+  }
+
+  // Games button (controller icon)
+  const gamesBtn = createMenuButton("games-menu", controllerSvg(), "Games");
+  // Dropdown for games
+  const gamesDropdown = document.createElement("div");
+  gamesDropdown.className = "dropdown-content";
+  gamesDropdown.id = "games-dropdown";
+  games.forEach((g) => {
+    const item = document.createElement("div");
+    item.className = "dropdown-item";
+    item.textContent = g.name;
+    item.onclick = () => window.open(g.url, "_blank");
+    gamesDropdown.appendChild(item);
+  });
+  gamesBtn.appendChild(gamesDropdown);
+  menuBar.appendChild(gamesBtn);
+
+  // Search button (magnifier)
+  const searchSvg = createSvg(["M21 21l-4.35-4.35", "M11 19a8 8 0 100-16 8 8 0 000 16z"]);
+  const searchBtn = createMenuButton("search-menu", searchSvg, "Search");
+  menuBar.appendChild(searchBtn);
+
+  // Settings button (gear)
+  const gearSvg = createSvg([
+    "M12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z",
+    "M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06A2 2 0 113.27 17.8l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82L4.2 3.27A2 2 0 116.99.44l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V1a2 2 0 114 0v.09a1.65 1.65 0 001 1.51h.09a1.65 1.65 0 001.82-.33l.06-.06A2 2 0 1120.73 6.2l-.06.06a1.65 1.65 0 00-.33 1.82V9c0 .4.15.78.44 1.06a1.65 1.65 0 00.33 1.82z"
+  ]);
+  const settingsBtn = createMenuButton("settings-menu", gearSvg, "Settings");
+
+  // Settings dropdown (color choices)
+  const settingsDropdown = document.createElement("div");
+  settingsDropdown.className = "dropdown-content";
+  settingsDropdown.id = "settings-dropdown";
+
+  const colorOptions = [
+    { name: "Blue", value: "blue", color: "#4f46e5" },
+    { name: "Orange", value: "orange", color: "#ea580c" },
+    { name: "Red", value: "red", color: "#dc2626" },
+    { name: "White", value: "white", color: "#ffffff" },
+    { name: "Black", value: "black", color: "#000000" }
+  ];
+
+  colorOptions.forEach((opt) => {
+    const item = document.createElement("div");
+    item.className = "dropdown-item color-picker-item";
+    const dot = document.createElement("span");
+    dot.className = "color-dot";
+    dot.style.backgroundColor = opt.color;
+    const label = document.createElement("span");
+    label.textContent = opt.name;
+    item.appendChild(dot);
+    item.appendChild(label);
+    item.onclick = (e) => {
+      e.stopPropagation();
+      currentColor = opt.value;
+      localStorage.setItem("noobsGuiColor", currentColor);
+      applyColorTheme(currentColor);
+    };
+    settingsDropdown.appendChild(item);
+  });
+
+  settingsBtn.appendChild(settingsDropdown);
+  menuBar.appendChild(settingsBtn);
+
+  // Discord button with monochrome glyph (link)
+  const discordBtn = createMenuButton("discord-link", discordSvg(), "Discord", true, discordUrl);
+  menuBar.appendChild(discordBtn);
+
+  widget.appendChild(menuBar);
+
+  // Append to body
+  document.body.appendChild(widget);
+
+  // -------------------------
+  // Theme application
+  // -------------------------
+  function applyColorTheme(color) {
+    const theme = colorThemes[color] || colorThemes.blue;
+    // header
+    const headerEl = widget.querySelector(".noobs-header");
+    if (headerEl) headerEl.style.backgroundColor = theme.primary;
+    // input and send
+    const inputBg = widget.querySelector("#chat-input");
+    if (inputBg) {
+      inputBg.style.background = theme.inputBg;
+      inputBg.style.color = theme.text || "#fff";
+    }
+    const send = widget.querySelector("#send-btn");
+    if (send) {
+      send.style.background = theme.primary;
+      send.style.color = "#fff";
+    }
+    // messages area bg
+    const msgArea = widget.querySelector(".noobs-messages");
+    if (msgArea) msgArea.style.background = theme.bg;
+    // menu bar
+    const mb = widget.querySelector(".menu-bar");
+    if (mb) mb.style.background = theme.menuBg;
+    // ai message text color
+    const aiMsgs = widget.querySelectorAll(".ai-message");
+    aiMsgs.forEach((m) => {
+      m.style.color = theme.text || "#d1d5db";
+      m.style.background = "linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))";
+    });
+    // user messages
+    const userMsgs = widget.querySelectorAll(".user-message");
+    userMsgs.forEach((m) => {
+      m.style.background = theme.primary;
+      m.style.color = "#fff";
+    });
+
+    // update menu buttons color
+    const menuButtons = widget.querySelectorAll(".menu-button");
+    menuButtons.forEach((btn) => {
+      btn.style.color = theme.text || "#d1d5db";
+    });
+  }
+
+  applyColorTheme(currentColor);
+
+  // -------------------------
+  // MathJax loader (optional)
+  // -------------------------
+  function loadMathJax() {
+    if (window.MathJaxLoaded) return;
+    window.MathJaxLoaded = true;
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js";
+    s.async = true;
+    document.head.appendChild(s);
+  }
+  loadMathJax();
+
+  // -------------------------
+  // Markdown -> minimal HTML renderer
+  // (keeps original simple replacements)
+  // -------------------------
+  function renderMarkdown(text) {
+    if (!text) return "";
+    let html = text
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.*?)\*/g, "<em>$1</em>")
+      .replace(/^#+\s*(.*)/gm, "<strong>$1</strong>")
+      .replace(/^(\d+)\.\s(.*?)/gm, "<br>$1. $2")
+      .replace(/^(-|\*)\s(.*?)/gm, "<br>&bull; $2")
+      .replace(/```(\w+)?\n([\s\S]*?)```/g, "<pre>$2</pre>")
+      .replace(/\n\n/g, "<br><br>");
+    return html;
+  }
+
+  // -------------------------
+  // Message handling
+  // -------------------------
+  function addMessage(text, sender = "ai", isTemporary = false) {
+    const msgDiv = document.createElement("div");
+    msgDiv.className = `message ${sender}-message ${sender === "ai" ? "ai-message" : "user-message"}`;
+    if (isTemporary) msgDiv.classList.add("temporary");
+    msgDiv.innerHTML = renderMarkdown(text);
+    messages.appendChild(msgDiv);
+    messages.scrollTop = messages.scrollHeight;
+    // MathJax typeset if loaded
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      window.MathJax.typesetPromise([msgDiv]).catch((err) => console.error("MathJax error:", err));
+    }
+    return msgDiv;
+  }
+
+  function updateMessage(element, newText) {
+    if (!element) return;
+    element.innerHTML = renderMarkdown(newText);
+    messages.scrollTop = messages.scrollHeight;
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      window.MathJax.typesetPromise([element]).catch((err) => console.error("MathJax error:", err));
+    }
+  }
+
+  // Initial greeting
+  addMessage("Hello! I'm Noobs AI. Ask me a question to get started.", "ai");
+
+  // -------------------------
+  // Content generation
+  // -------------------------
+  async function generateContent(prompt) {
+    if (!prompt || isGenerating) return;
+    isGenerating = true;
+    addMessage(prompt, "user");
+
+    // temporary "Thinking..." message (ai)
+    const temp = addMessage("Thinking...", "ai", true);
+
+    // craft payload similar to original structure
+    const payload = {
+      contents: [{ parts: [{ text: prompt }] }],
+      tools: [{ google_search: {} }],
+      systemInstruction: {
+        parts: [
+          {
+            text:
+              "You are a helpful and concise browser assistant. Respond clearly and in Markdown format. Use Google Search for current events."
+          }
+        ]
+      }
+    };
+
+    try {
+      const response = await fetchWithBackoff(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      let generatedText = "Sorry, I encountered an issue. Please try again.";
+      if (result.error) {
+        generatedText = `Proxy Error: ${result.error}. Double-check your Cloudflare Worker deployment and GEMINI_API_KEY environment variable.`;
+      } else if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts.length > 0) {
+        generatedText = result.candidates[0].content.parts[0].text || generatedText;
+      } else if (result.output) {
+        // attempt other possible shapes
+        generatedText = result.output || generatedText;
+      }
+
+      updateMessage(temp, generatedText);
+      temp.classList.remove("temporary");
+    } catch (err) {
+      console.error("Network Error:", err);
+      updateMessage(temp, "Error: A network issue occurred. Ensure your Cloudflare Worker is deployed and its URL is correct.");
+      temp.classList.remove("temporary");
+    } finally {
+      isGenerating = false;
+    }
+  }
+
+  // -------------------------
+  // Events: send button and enter key
+  // -------------------------
+  sendBtn.addEventListener("click", () => {
+    const prompt = chatInput.value.trim();
+    if (prompt && !isGenerating) {
+      chatInput.value = "";
+      generateContent(prompt);
+    }
+  });
+
+  chatInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter" && !isGenerating) {
+      sendBtn.click();
+    }
+  });
+
+  // Search button behavior: open proxy placeholder page
+  searchBtn.addEventListener("click", () => {
+    const newWindow = window.open("about:blank", "_blank");
+    if (newWindow) {
+      const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Proxy Search Launcher</title>
+  <style>
+    body{font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;background-color:#1f2937;color:white}
+    .card{background-color:#374151;padding:40px;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.4);text-align:center}
+    h1{margin-bottom:20px;font-size:1.5em}
+    a{color:#818cf8;text-decoration:none;font-weight:bold}
+    a:hover{text-decoration:underline}
+    p{margin-top:20px;color:#9ca3af}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Proxy Search Placeholder</h1>
+    <p>This button simulates opening a proxy like Ultraviolet/Interstellar.</p>
+    <a href="${proxyPlaceholderUrl}" target="_top" style="display:inline-block;padding:10px 20px;background-color:#4f46e5;border-radius:8px;margin-top:20px;color:white;">Launch Proxy Search (Placeholder)</a>
+    <p>Please replace the link with your actual proxy URL.</p>
+  </div>
+</body>
+</html>`;
+      newWindow.document.write(htmlContent);
+      newWindow.document.close();
+    }
+  });
+
+  // Close button
+  closeBtn.addEventListener("click", () => {
+    widget.style.display = "none";
+  });
+
+  // Games menu hover already handled through CSS; clicking outside handled by browser.
+
+  // -------------------------
+  // Dragging behavior (mouse + touch)
+  // -------------------------
+  let isDragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
+  let initialPositionSet = false;
+
+  function setInitialPosition() {
+    if (initialPositionSet) return;
+    // center the widget initially
+    if (widget.style.position !== "fixed") widget.style.position = "fixed";
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const w = widget.offsetWidth;
+    const h = widget.offsetHeight;
+    widget.style.left = vw / 2 - w / 2 + "px";
+    widget.style.top = vh / 2 - h / 2 + "px";
+    initialPositionSet = true;
+  }
+  setInitialPosition();
+  window.addEventListener("resize", setInitialPosition);
+
+  header.addEventListener("mousedown", (e) => {
+    if (e.button !== 0) return;
+    isDragging = true;
+    const rect = widget.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+    widget.style.cursor = "grabbing";
+    widget.style.right = "auto";
+    widget.style.bottom = "auto";
+    e.preventDefault();
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+    let newX = e.clientX - offsetX;
+    let newY = e.clientY - offsetY;
+    const maxLeft = window.innerWidth - widget.offsetWidth;
+    const maxTop = window.innerHeight - widget.offsetHeight;
+    newX = Math.max(0, Math.min(newX, maxLeft));
+    newY = Math.max(0, Math.min(newY, maxTop));
+    widget.style.left = newX + "px";
+    widget.style.top = newY + "px";
+  });
+
+  document.addEventListener("mouseup", () => {
+    isDragging = false;
+    widget.style.cursor = "grab";
+  });
+
+  // Touch-based dragging
+  header.addEventListener("touchstart", (e) => {
+    const t = e.touches[0];
+    isDragging = true;
+    const rect = widget.getBoundingClientRect();
+    offsetX = t.clientX - rect.left;
+    offsetY = t.clientY - rect.top;
+    widget.style.right = "auto";
+    widget.style.bottom = "auto";
+    e.preventDefault();
+  });
+
+  document.addEventListener("touchmove", (e) => {
+    if (!isDragging) return;
+    const t = e.touches[0];
+    let newX = t.clientX - offsetX;
+    let newY = t.clientY - offsetY;
+    const maxLeft = window.innerWidth - widget.offsetWidth;
+    const maxTop = window.innerHeight - widget.offsetHeight;
+    newX = Math.max(0, Math.min(newX, maxLeft));
+    newY = Math.max(0, Math.min(newY, maxTop));
+    widget.style.left = newX + "px";
+    widget.style.top = newY + "px";
+    e.preventDefault();
+  });
+
+  document.addEventListener("touchend", () => {
+    isDragging = false;
+  });
+})();
