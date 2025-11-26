@@ -52,7 +52,7 @@
             max-width: 80%;
             font-size: 14px;
             line-height: 1.4;
-            white-space: pre-wrap; /* Ensures formatting is kept */
+            white-space: pre-wrap;
         }
         .user-msg {
             background-color: #007bff;
@@ -123,7 +123,7 @@
             margin-bottom: 2px;
         }
         .discord-btn svg {
-            fill: #5865F2; /* Discord Brand Color */
+            fill: #5865F2;
         }
     `;
     shadow.appendChild(style);
@@ -166,54 +166,44 @@
         div.className = `message ${className}`;
         div.textContent = text;
         chatLog.appendChild(div);
-        // Auto-scroll to the bottom
         chatLog.scrollTop = chatLog.scrollHeight;
-        return div; // Return the message element (useful for loading state)
+        return div;
     }
 
     async function handleSend() {
         const text = input.value.trim();
         if (!text) return;
 
-        // 1. Add user message and clear input
         addMessage(text, 'user-msg');
         input.value = '';
         
-        // 2. Disable input/button and show loading
         input.disabled = true;
         sendBtn.disabled = true;
         const loadingMsg = addMessage('AI is typing...', 'ai-msg');
 
         try {
-            // 3. Send request to the secure worker proxy
             const response = await fetch(WORKER_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    // NO API KEY HERE! The worker handles authorization securely.
                 },
                 body: JSON.stringify({ message: text })
             });
 
-            // 4. Handle response
             loadingMsg.remove();
             
             if (!response.ok) {
-                // If the worker returns an HTTP error
                 const errorText = await response.text();
                 throw new Error(`Worker Error (${response.status}): ${errorText.substring(0, 100)}...`);
             }
             
-            // Assuming the worker returns the final AI response as plain text
             const data = await response.text(); 
             addMessage(data, 'ai-msg');
 
         } catch (err) {
-            // 5. Handle any fetch or processing errors
             loadingMsg.remove();
             addMessage('**Connection Error:** ' + err.message, 'ai-msg');
         } finally {
-            // 6. Re-enable controls
             input.disabled = false;
             sendBtn.disabled = false;
             input.focus();
