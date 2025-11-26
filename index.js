@@ -1,15 +1,16 @@
-javascript:(function() {
-    // Toggle existing widget
+(function () {
+    // 1. Toggle Check: If widget exists, toggle visibility and exit.
     if (document.getElementById('noobs-gui-widget')) {
         const w = document.getElementById('noobs-gui-widget');
         w.style.display = (w.style.display === 'none' ? 'flex' : 'none');
         return;
     }
 
-    // Configuration
+    // 2. Configuration & State
     const apiUrl = "https://twilight-hill-3941.blueboltgamingyt.workers.dev";
     let isGenerating = false;
     let currentColor = localStorage.getItem('noobsGuiColor') || 'blue';
+
     const defaultIconPath = 'M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z';
 
     const games = [
@@ -30,7 +31,7 @@ javascript:(function() {
         black: { primary: '#6366f1', secondary: '#a5b4fc', bg: '#000000', inputBg: '#1a1a1a', menuBg: '#0a0a0a' }
     };
 
-    // Fetch with exponential backoff
+    // 3. Helper Functions
     async function fetchWithBackoff(url, options, maxRetries = 5) {
         for (let i = 0; i < maxRetries; i++) {
             try {
@@ -47,7 +48,6 @@ javascript:(function() {
         throw new Error("API call failed after multiple retries.");
     }
 
-    // Generate AI content
     async function generateContent(prompt) {
         if (isGenerating) return;
         isGenerating = true;
@@ -59,7 +59,7 @@ javascript:(function() {
             tools: [{ "google_search": {} }],
             systemInstruction: {
                 parts: [{ text: "You are a helpful and concise browser assistant. Respond clearly and in Markdown format. Use Google Search for current events." }]
-            }
+            },
         };
 
         try {
@@ -75,10 +75,9 @@ javascript:(function() {
             if (result.error) {
                 generatedText = `Proxy Error: ${result.error}. Double-check your Cloudflare Worker deployment and the GEMINI_API_KEY environment variable. If you get 'Method not allowed', ensure you are typing a question and clicking the 'Send' button, not just clicking the bookmarklet again.`;
             } else if (result.candidates && result.candidates.length > 0 &&
-                       result.candidates[0].content && result.candidates[0].content.parts.length > 0) {
+                result.candidates[0].content && result.candidates[0].content.parts.length > 0) {
                 generatedText = result.candidates[0].content.parts[0].text || generatedText;
             }
-
             updateMessage(loadingMsg, generatedText);
         } catch (error) {
             console.error('Network Error:', error);
@@ -88,7 +87,6 @@ javascript:(function() {
         }
     }
 
-    // Load MathJax
     const loadMathJax = () => {
         if (window.MathJaxLoaded) return;
         window.MathJaxLoaded = true;
@@ -98,7 +96,6 @@ javascript:(function() {
         document.head.appendChild(script);
     };
 
-    // Render Markdown
     const renderMarkdown = (text) => {
         let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
@@ -110,14 +107,12 @@ javascript:(function() {
         return html;
     };
 
-    // Apply color theme
     const applyColorTheme = (color) => {
         const theme = colorThemes[color];
         const widget = document.getElementById('noobs-gui-widget');
         if (!widget) return;
 
         widget.style.backgroundColor = theme.bg;
-
         const header = widget.querySelector('.header');
         if (header) header.style.backgroundColor = theme.primary;
 
@@ -164,153 +159,37 @@ javascript:(function() {
         });
     };
 
-    // CSS Styles
-    const css = `
-        .widget-container {
-            width: 90vw;
-            max-width: 400px;
-            height: 70vh;
-            max-height: 700px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            border-radius: 12px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            z-index: 99999;
-            position: fixed;
-            bottom: 16px;
-            right: 16px;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.3s;
-        }
-        .chat-input-container {
-            display: flex;
-            padding: 8px;
-            transition: background-color 0.3s;
-        }
-        .chat-messages {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-        }
-        .message {
-            margin-bottom: 8px;
-            border-radius: 8px;
-            padding: 8px 12px;
-            max-width: 85%;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .user-message {
-            color: white;
-            margin-left: auto;
-        }
-        .ai-message {
-            margin-right: auto;
-            transition: all 0.3s;
-        }
-        .menu-bar {
-            height: 50px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            border-radius: 0 0 12px 12px;
-            transition: background-color 0.3s;
-        }
-        .menu-button {
-            position: relative;
-            cursor: pointer;
-            padding: 0 10px;
-            transition: color 0.2s;
-        }
-        .menu-button:hover {
-            opacity: 0.8;
-        }
-        .dropdown-content {
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            box-shadow: 0 -4px 10px rgba(0,0,0,0.3);
-            border-radius: 8px 8px 0 0;
-            min-width: 150px;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.2s, visibility 0.2s;
-            padding: 8px 0;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .menu-button:hover .dropdown-content {
-            opacity: 1;
-            visibility: visible;
-        }
-        .dropdown-item {
-            padding: 8px 12px;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.3s;
-            border-left: 3px solid transparent;
-        }
-        .dropdown-item:hover {
-            opacity: 0.8;
-            border-left-color: currentColor;
-        }
-        #chat-input {
-            flex-grow: 1;
-            padding: 8px;
-            border-radius: 8px 0 0 8px;
-            border: none;
-            transition: all 0.3s;
-            outline: none;
-        }
-        #send-btn {
-            padding: 8px 16px;
-            color: white;
-            border-radius: 0 8px 8px 0;
-            border: none;
-            transition: background-color 0.3s;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        #send-btn:hover {
-            opacity: 0.9;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            color: white;
-            font-weight: bold;
-            border-radius: 12px 12px 0 0;
-            cursor: grab;
-            transition: background-color 0.3s;
-        }
-        .color-picker-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .color-dot {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.3);
-        }
+    // 4. Styles (CSS)
+    const css = ` 
+        .widget-container { width:90vw; max-width:400px; height:70vh; max-height:700px; box-shadow:0 10px 25px rgba(0,0,0,0.3); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; z-index:99999; position:fixed; bottom:16px; right:16px; font-family:'Inter',sans-serif; transition:all 0.3s } 
+        .chat-input-container { display:flex; padding:8px; transition:background-color 0.3s } 
+        .chat-messages { flex-grow:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column } 
+        .message { margin-bottom:8px; border-radius:8px; padding:8px 12px; max-width:85% } 
+        .user-message { color:white; margin-left:auto } 
+        .ai-message { margin-right:auto; transition:all 0.3s } 
+        .menu-bar { height:50px; display:flex; justify-content:space-around; align-items:center; border-top:1px solid rgba(255,255,255,0.1); border-radius:0 0 12px 12px; transition:background-color 0.3s } 
+        .menu-button { position:relative; cursor:pointer; padding:0 10px; transition:color 0.2s } 
+        .menu-button:hover { opacity:0.8 } 
+        .dropdown-content { position:absolute; bottom:100%; left:50%; transform:translateX(-50%); box-shadow:0 -4px 10px rgba(0,0,0,0.3); border-radius:8px 8px 0 0; min-width:150px; opacity:0; visibility:hidden; transition:opacity 0.2s,visibility 0.2s; padding:8px 0 } 
+        .menu-button:hover .dropdown-content { opacity:1; visibility:visible } 
+        .dropdown-item { padding:8px 12px; cursor:pointer; white-space:nowrap; transition:all 0.3s } 
+        .dropdown-item:hover { opacity:0.8 } 
+        #chat-input { flex-grow:1; padding:8px; border-radius:8px 0 0 8px; border:none; transition:all 0.3s } 
+        #send-btn { padding:8px 16px; color:white; border-radius:0 8px 8px 0; border:none; transition:background-color 0.3s } 
+        .header { display:flex; justify-content:space-between; align-items:center; padding:12px; color:white; font-weight:bold; border-radius:12px 12px 0 0; cursor:grab; transition:background-color 0.3s } 
+        .color-picker-item { display:flex; align-items:center; gap:8px } 
+        .color-dot { width:20px; height:20px; border-radius:50%; border:2px solid rgba(255,255,255,0.3) } 
     `;
 
     const style = document.createElement('style');
     style.innerHTML = css;
     document.head.appendChild(style);
 
-    // Create widget container
+    // 5. Build DOM Elements
     const widgetContainer = document.createElement('div');
     widgetContainer.id = 'noobs-gui-widget';
     widgetContainer.className = 'widget-container';
 
-    // Helper function to create SVG icons
     const createSvg = (d, text) => {
         const xmlns = 'http://www.w3.org/2000/svg';
         const svg = document.createElementNS(xmlns, 'svg');
@@ -319,7 +198,6 @@ javascript:(function() {
         svg.setAttribute('stroke', 'currentColor');
         svg.setAttribute('viewBox', '0 0 24 24');
         svg.setAttribute('style', 'width:24px;height:24px;');
-
         const paths = Array.isArray(d) ? d : [d];
         paths.forEach(pathD => {
             const path = document.createElementNS(xmlns, 'path');
@@ -329,14 +207,12 @@ javascript:(function() {
             path.setAttribute('d', pathD);
             svg.appendChild(path);
         });
-
         const span = document.createElement('span');
         span.style.cssText = 'font-size: 10px; display: block; margin-top: -4px;';
         span.textContent = text;
         return { icon: svg, text: span };
     };
 
-    // Helper function to create menu buttons
     const createMenuButton = (id, iconDs, text, isLink = false, href = '') => {
         const btn = isLink ? document.createElement('a') : document.createElement('div');
         btn.id = id;
@@ -351,24 +227,19 @@ javascript:(function() {
         return btn;
     };
 
-    // Create header
     const header = document.createElement('div');
     header.className = 'header';
-
     const titleSpan = document.createElement('span');
     titleSpan.className = 'text-lg';
     titleSpan.textContent = 'Noobs Gui';
-
     const { icon: headerIcon } = createSvg(defaultIconPath, '');
     headerIcon.setAttribute('stroke-width', '1.5');
     headerIcon.style.cssText = 'width: 20px; height: 20px; margin-right: 8px; color: white;';
-
     const titleGroup = document.createElement('div');
     titleGroup.style.display = 'flex';
     titleGroup.style.alignItems = 'center';
     titleGroup.appendChild(headerIcon);
     titleGroup.appendChild(titleSpan);
-
     header.appendChild(titleGroup);
 
     const closeBtn = document.createElement('button');
@@ -376,33 +247,26 @@ javascript:(function() {
     closeBtn.textContent = '×';
     closeBtn.style.cssText = 'font-size: 1.5rem; background: none; border: none; color: white; cursor: pointer; line-height: 1;';
     header.appendChild(closeBtn);
-
     widgetContainer.appendChild(header);
 
-    // Create message container
     const messageContainer = document.createElement('div');
     messageContainer.id = 'chat-messages';
     messageContainer.className = 'chat-messages';
     widgetContainer.appendChild(messageContainer);
 
-    // Create input container
     const inputContainer = document.createElement('div');
     inputContainer.className = 'chat-input-container';
-
     const chatInput = document.createElement('input');
     chatInput.type = 'text';
     chatInput.id = 'chat-input';
     chatInput.placeholder = 'Ask me anything...';
     inputContainer.appendChild(chatInput);
-
     const sendBtn = document.createElement('button');
     sendBtn.id = 'send-btn';
     sendBtn.textContent = 'Send';
     inputContainer.appendChild(sendBtn);
-
     widgetContainer.appendChild(inputContainer);
 
-    // Create menu bar
     const menuBar = document.createElement('div');
     menuBar.className = 'menu-bar';
 
@@ -420,36 +284,30 @@ javascript:(function() {
     document.body.appendChild(widgetContainer);
     loadMathJax();
 
-    // Message functions
+    // 6. Interaction Logic
     function addMessage(text, sender, isTemporary = false) {
         const msgDiv = document.createElement('div');
         msgDiv.className = `message ${sender}-message`;
         msgDiv.style.whiteSpace = 'pre-wrap';
         msgDiv.innerHTML = renderMarkdown(text);
-
         if (sender === 'user') {
             const theme = colorThemes[currentColor];
             msgDiv.style.backgroundColor = theme.primary;
         }
-
         if (isTemporary) {
             msgDiv.id = 'temp-ai-message-' + Date.now();
         }
-
         messageContainer.appendChild(msgDiv);
         messageContainer.scrollTop = messageContainer.scrollHeight;
-
         if (window.MathJax && window.MathJax.typesetPromise) {
             window.MathJax.typesetPromise([msgDiv]).catch((err) => console.error('MathJax error:', err));
         }
-
         return msgDiv;
     }
 
     function updateMessage(element, newText) {
         element.innerHTML = renderMarkdown(newText);
         messageContainer.scrollTop = messageContainer.scrollHeight;
-
         if (window.MathJax && window.MathJax.typesetPromise) {
             window.MathJax.typesetPromise([element]).catch((err) => console.error('MathJax error:', err));
         }
@@ -457,7 +315,6 @@ javascript:(function() {
 
     addMessage("Hello! I'm Noobs AI. Ask me a question to get started.", 'ai');
 
-    // Event listeners
     sendBtn.addEventListener('click', () => {
         const prompt = chatInput.value.trim();
         if (prompt && !isGenerating) {
@@ -472,7 +329,7 @@ javascript:(function() {
         }
     });
 
-    // Games dropdown
+    // 7. Dropdowns & Settings
     const gamesDropdown = document.createElement('div');
     gamesDropdown.id = 'games-dropdown';
     gamesDropdown.className = 'dropdown-content';
@@ -486,7 +343,6 @@ javascript:(function() {
         gamesDropdown.appendChild(item);
     });
 
-    // Settings dropdown
     const settingsDropdown = document.createElement('div');
     settingsDropdown.id = 'settings-dropdown';
     settingsDropdown.className = 'dropdown-content';
@@ -503,96 +359,38 @@ javascript:(function() {
     colorOptions.forEach(option => {
         const item = document.createElement('div');
         item.className = 'dropdown-item color-picker-item';
-
         const colorDot = document.createElement('span');
         colorDot.className = 'color-dot';
         colorDot.style.backgroundColor = option.color;
-
         const label = document.createElement('span');
         label.textContent = option.name;
-
         item.appendChild(colorDot);
         item.appendChild(label);
-
         item.onclick = (e) => {
             e.stopPropagation();
             currentColor = option.value;
             localStorage.setItem('noobsGuiColor', currentColor);
             applyColorTheme(currentColor);
         };
-
         settingsDropdown.appendChild(item);
     });
 
     applyColorTheme(currentColor);
 
-    // Search menu handler
     searchMenu.addEventListener('click', () => {
         const newWindow = window.open('about:blank', '_blank');
         if (newWindow) {
-            const htmlContent = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Proxy Search Launcher</title>
-                    <style>
-                        body {
-                            font-family: sans-serif;
-                            display: flex;
-                            flex-direction: column;
-                            align-items: center;
-                            justify-content: center;
-                            height: 100vh;
-                            margin: 0;
-                            background-color: #1f2937;
-                            color: white;
-                        }
-                        .card {
-                            background-color: #374151;
-                            padding: 40px;
-                            border-radius: 12px;
-                            box-shadow: 0 4px 15px rgba(0,0,0,.4);
-                            text-align: center;
-                        }
-                        h1 {
-                            margin-bottom: 20px;
-                            font-size: 1.5em;
-                        }
-                        a {
-                            color: #818cf8;
-                            text-decoration: none;
-                            font-weight: bold;
-                        }
-                        a:hover {
-                            text-decoration: underline;
-                        }
-                        p {
-                            margin-top: 20px;
-                            color: #9ca3af;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="card">
-                        <h1>Proxy Search Placeholder</h1>
-                        <p>This button simulates opening a proxy like Ultraviolet/Interstellar.</p>
-                        <a href="${proxyPlaceholderUrl}" target="_top" style="display:block;padding:10px 20px;background-color:#4f46e5;border-radius:8px;margin-top:20px;">Launch Proxy Search (Placeholder)</a>
-                        <p>Please replace the link with your actual proxy URL.</p>
-                    </div>
-                </body>
-                </html>
-            `;
+            const htmlContent = ` <!DOCTYPE html> <html> <head> <title>Proxy Search Launcher</title> <style> body{font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;background-color:#1f2937;color:white} .card{background-color:#374151;padding:40px;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.4);text-align:center} h1{margin-bottom:20px;font-size:1.5em} a{color:#818cf8;text-decoration:none;font-weight:bold} a:hover{text-decoration:underline} p{margin-top:20px;color:#9ca3af} </style> </head> <body> <div class="card"> <h1>Proxy Search Placeholder</h1> <p>This button simulates opening a proxy like Ultraviolet/Interstellar.</p> <a href="${proxyPlaceholderUrl}" target="_top" style="display:block;padding:10px 20px;background-color:#4f46e5;border-radius:8px;margin-top:20px;">Launch Proxy Search (Placeholder)</a> <p>Please replace the link with your actual proxy URL.</p> </div> </body> </html>`;
             newWindow.document.write(htmlContent);
             newWindow.document.close();
         }
     });
 
-    // Close button handler
     closeBtn.addEventListener('click', () => {
         widgetContainer.style.display = 'none';
     });
 
-    // Dragging functionality
+    // 8. Drag and Drop Logic
     let isDragging = false;
     let offsetX, offsetY;
     let initialPositionSet = false;
@@ -603,9 +401,7 @@ javascript:(function() {
             const viewportHeight = window.innerHeight;
             const widgetWidth = widgetContainer.offsetWidth;
             const widgetHeight = widgetContainer.offsetHeight;
-
             if (widgetContainer.style.position === 'fixed') {
-                // Already positioned
             } else {
                 widgetContainer.style.position = 'fixed';
                 widgetContainer.style.left = (viewportWidth / 2 - widgetWidth / 2) + 'px';
@@ -618,20 +414,15 @@ javascript:(function() {
     setInitialPosition();
     window.addEventListener('resize', setInitialPosition);
 
-    // Mouse dragging
     header.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
-
         isDragging = true;
-
         if (widgetContainer.style.position !== 'fixed') {
             widgetContainer.style.position = 'fixed';
         }
-
         const rect = widgetContainer.getBoundingClientRect();
         offsetX = e.clientX - rect.left;
         offsetY = e.clientY - rect.top;
-
         widgetContainer.style.right = 'auto';
         widgetContainer.style.bottom = 'auto';
         widgetContainer.style.cursor = 'grabbing';
@@ -640,16 +431,12 @@ javascript:(function() {
 
     document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
-
         let newX = e.clientX - offsetX;
         let newY = e.clientY - offsetY;
-
         const maxLeft = window.innerWidth - widgetContainer.offsetWidth;
         const maxTop = window.innerHeight - widgetContainer.offsetHeight;
-
         newX = Math.max(0, Math.min(newX, maxLeft));
         newY = Math.max(0, Math.min(newY, maxTop));
-
         widgetContainer.style.left = newX + 'px';
         widgetContainer.style.top = newY + 'px';
     });
@@ -659,19 +446,15 @@ javascript:(function() {
         widgetContainer.style.cursor = 'grab';
     });
 
-    // Touch dragging
     header.addEventListener('touchstart', (e) => {
         const touch = e.touches[0];
         isDragging = true;
-
         if (widgetContainer.style.position !== 'fixed') {
             widgetContainer.style.position = 'fixed';
         }
-
         const rect = widgetContainer.getBoundingClientRect();
         offsetX = touch.clientX - rect.left;
         offsetY = touch.clientY - rect.top;
-
         widgetContainer.style.right = 'auto';
         widgetContainer.style.bottom = 'auto';
         e.preventDefault();
@@ -680,16 +463,12 @@ javascript:(function() {
     document.addEventListener('touchmove', (e) => {
         if (!isDragging) return;
         const touch = e.touches[0];
-
         let newX = touch.clientX - offsetX;
         let newY = touch.clientY - offsetY;
-
         const maxLeft = window.innerWidth - widgetContainer.offsetWidth;
         const maxTop = window.innerHeight - widgetContainer.offsetHeight;
-
         newX = Math.max(0, Math.min(newX, maxLeft));
         newY = Math.max(0, Math.min(newY, maxTop));
-
         widgetContainer.style.left = newX + 'px';
         widgetContainer.style.top = newY + 'px';
         e.preventDefault();
