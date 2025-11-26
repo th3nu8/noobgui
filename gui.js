@@ -183,7 +183,7 @@
         const loadingMsg = addMessage('AI is typing...', 'ai-msg');
 
         try {
-            // Send request to the secure worker proxy
+            // 1. Send request to the secure worker proxy
             const response = await fetch(WORKER_URL, {
                 method: 'POST',
                 headers: {
@@ -195,31 +195,19 @@
             loadingMsg.remove();
             
             if (!response.ok) {
-                // If the worker returns an HTTP error, try to read the error body
+                // If the worker returns an HTTP error, read the error body as text for debugging
                 const errorText = await response.text();
                 throw new Error(`Worker HTTP Error (${response.status}): ${errorText.substring(0, 100)}...`);
             }
             
-            // *** CRITICAL CHANGE: Expecting and parsing the full JSON response from the worker ***
-            const data = await response.json(); 
-            let aiResponseText;
-
-            if (data.candidates && data.candidates.length > 0) {
-                // SUCCESS: Extract the final message from the complex Gemini structure
-                aiResponseText = data.candidates[0].content.parts[0].text;
-            } else if (data.error) {
-                // Worker returned a JSON object with a specific error field
-                aiResponseText = `AI API Error: ${data.error.message}`;
-            } else {
-                // Unknown response structure
-                aiResponseText = 'Unknown API response format. Check Worker logs for the error.';
-            }
-
-            addMessage(aiResponseText, 'ai-msg');
+            // *** CRITICAL FIX: Use .text() because the Worker is now structured to send a PLAIN TEXT string ***
+            const data = await response.text(); 
+            
+            addMessage(data, 'ai-msg');
 
         } catch (err) {
             loadingMsg.remove();
-            addMessage('**Connection/Parsing Error:** ' + err.message, 'ai-msg');
+            addMessage('**Connection/Request Error:** ' + err.message, 'ai-msg');
         } finally {
             input.disabled = false;
             sendBtn.disabled = false;
