@@ -165,7 +165,21 @@
     function addMessage(text, className) {
         const div = document.createElement('div');
         div.className = `message ${className}`;
-        div.textContent = text;
+        
+        // --- FIX: Simple Markdown Parsing ---
+        // 1. Replace double asterisks (**) with bold tags (<b>)
+        let htmlText = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+        
+        // 2. Wrap display math ($$...$$) in a block element for better rendering
+        //    (Note: Full LaTeX rendering still requires a library like MathJax)
+        htmlText = htmlText.replace(/\$\$(.*?)\$\$/gs, '<div class="math-display">$1</div>');
+        
+        // 3. Simple list item replacement
+        htmlText = htmlText.replace(/^\* (.*)/gm, '<li>$1</li>');
+        
+        // Use innerHTML to render the HTML/Markdown, not textContent
+        div.innerHTML = htmlText; 
+        
         chatLog.appendChild(div);
         chatLog.scrollTop = chatLog.scrollHeight;
         return div;
