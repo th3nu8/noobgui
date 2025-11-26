@@ -6,7 +6,6 @@
     }
 
     // --- Configuration ---
-    // This is your Cloudflare Worker URL (the secure proxy)
     const WORKER_URL = 'https://twilight-hill-3941.blueboltgamingyt.workers.dev';
     // --- End Configuration ---
 
@@ -38,7 +37,57 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             overflow: hidden;
             border: 1px solid #333;
+            transition: height 0.3s, width 0.3s; /* for minimize transition */
         }
+
+        /* Styles for the new header/drag bar */
+        #gui-header {
+            padding: 8px 15px;
+            background-color: #111;
+            color: #ddd;
+            cursor: grab; /* Indicates dragging capability */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        #gui-header:active {
+            cursor: grabbing;
+        }
+        .header-controls button {
+            background: none;
+            border: none;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            margin-left: 5px;
+            cursor: pointer;
+            padding: 2px 5px;
+            transition: opacity 0.2s;
+        }
+        .header-controls button:hover {
+            opacity: 0.7;
+        }
+        .close-btn:hover {
+            color: red;
+        }
+        /* End Header Styles */
+
+        /* Minimized State */
+        .minimized {
+            height: 40px; /* Header height */
+            width: 300px;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+        .minimized .chat-area, 
+        .minimized .input-area,
+        .minimized .nav-bar {
+            display: none;
+        }
+
+        /* Existing Styles Below */
         .chat-area {
             flex-grow: 1;
             padding: 15px;
@@ -55,90 +104,16 @@
             line-height: 1.4;
             white-space: pre-wrap;
         }
-        .user-msg {
-            background-color: #007bff;
-            align-self: flex-end;
-        }
-        .ai-msg {
-            background-color: #333;
-            align-self: flex-start;
-        }
-        .input-area {
-            padding: 10px;
-            background-color: #252525;
-            display: flex;
-            gap: 5px;
-        }
-        input {
-            flex-grow: 1;
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #444;
-            background: #1e1e1e;
-            color: white;
-            outline: none;
-        }
-        button.send-btn {
-            background: #007bff;
-            border: none;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        button.send-btn:hover:not(:disabled) {
-            background-color: #0056b3;
-        }
-        button.send-btn:disabled {
-            background-color: #555;
-            cursor: not-allowed;
-        }
-        .nav-bar {
-            height: 60px;
-            background-color: #111;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-top: 1px solid #333;
-        }
-        .nav-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-            color: white;
-            font-size: 10px;
-        }
-        .nav-btn:hover {
-            opacity: 1;
-        }
-        .nav-btn svg {
-            width: 24px;
-            height: 24px;
-            fill: white;
-            margin-bottom: 2px;
-        }
-        .discord-btn svg {
-            fill: #5865F2;
-        }
-        /* --- New Markdown and HTML Rendering Styles --- */
+        /* ... (Keep existing message, input, button, and nav-bar styles) ... */
 
-        /* Target the container holding the rendered message */
+        /* --- New Markdown and HTML Rendering Styles --- */
         .markdown-content {
-            /* Override default padding, reset margins for internal elements */
-            padding: 10px 15px; /* Adjust padding to give space around content */
+            padding: 10px 15px;
             margin: 0;
         }
-
-        /* Fix for list indentation and spacing */
         .markdown-content ul {
-            list-style-type: disc; /* Ensure dots are used */
-            padding-left: 20px;   /* Pull the list closer to the left edge */
+            list-style-type: disc;
+            padding-left: 20px;
             margin-top: 5px;
             margin-bottom: 5px;
         }
@@ -146,17 +121,13 @@
             margin-bottom: 5px;
             padding-left: 5px;
         }
-
-        /* Style for Headings (to remove the huge default spacing) */
         .markdown-content h2 {
             font-size: 1.2em;
             margin-top: 15px;
             margin-bottom: 8px;
-            border-bottom: 1px solid #444; /* Optional visual separator */
+            border-bottom: 1px solid #444;
             padding-bottom: 5px;
         }
-
-        /* Style for Display Math */
         .math-display {
             display: block;
             text-align: center;
@@ -164,8 +135,6 @@
             font-size: 1.1em;
             font-family: serif;
         }
-        
-        /* Style for horizontal rules */
         .markdown-content hr {
             border: none;
             border-top: 1px solid #555;
@@ -186,6 +155,13 @@
     const container = document.createElement('div');
     container.className = 'container';
     container.innerHTML = `
+        <div id="gui-header">
+            <span>AI Assistant</span>
+            <div class="header-controls">
+                <button id="min-btn" title="Minimize">—</button>
+                <button id="close-btn" class="close-btn" title="Exit">x</button>
+            </div>
+        </div>
         <div class="chat-area" id="chat-log">
             <div class="message ai-msg">Hello! I am connected via your secure Cloudflare Worker. How can I help?</div>
         </div>
@@ -202,16 +178,23 @@
     `;
     shadow.appendChild(container);
 
-    // 6. AI Interaction Logic
+    // 6. Get Elements
     const chatLog = shadow.getElementById('chat-log');
     const input = shadow.getElementById('user-input');
     const sendBtn = shadow.getElementById('send-btn');
+    const guiContainer = shadow.querySelector('.container');
+    const guiRoot = host; // The draggable element is the host
+    const guiHeader = shadow.getElementById('gui-header');
+    const minBtn = shadow.getElementById('min-btn');
+    const closeBtn = shadow.getElementById('close-btn');
+
+    // 7. Core UI Functions
     
+    // --- Message Rendering (Includes Markdown Fix) ---
     function addMessage(text, className) {
         const div = document.createElement('div');
-        div.className = `message ${className} markdown-content`; // Add new class for styling
-        
-        // --- FIX: Advanced Markdown and LaTeX Parsing ---
+        div.className = `message ${className} markdown-content`;
+
         let htmlText = text;
 
         // 1. Replace double asterisks (**) with bold tags (<b>)
@@ -219,32 +202,32 @@
         
         // 2. Replace Heading Level 2 (##) with H2 tags
         htmlText = htmlText.replace(/^##\s*(.*)$/gm, '<h2>$1</h2>');
-        // Note: You can add more levels (e.g., /^\#\s*(.*)$/gm for <h1>) if needed.
 
-        // 3. Replace single asterisks (*) or dashes (-) for list items with <li> tags
-        // This regex captures * or - at the start of a line and wraps the text in <li>
+        // 3. Replace single asterisks/dashes (*) for list items with <li> tags
+        // This regex ensures we only look for list markers at the start of a line
         htmlText = htmlText.replace(/^[*-]\s+(.*)/gm, '<li>$1</li>');
         
         // 4. Wrap all generated <li> items in an unordered list (<ul>)
-        // This is necessary for correct list rendering and indenting.
         if (htmlText.includes('<li>')) {
             htmlText = `<ul>${htmlText}</ul>`;
         }
 
-        // 5. Wrap display math ($$...$$) in a block element for better rendering
+        // 5. Wrap display math ($$...$$) in a block element
         htmlText = htmlText.replace(/\$\$(.*?)\$\$/gs, '<div class="math-display">$1</div>');
         
         // 6. Horizontal Rules (---)
         htmlText = htmlText.replace(/^---/gm, '<hr>');
 
-        // Use innerHTML to render the HTML/Markdown
         div.innerHTML = htmlText; 
         
         chatLog.appendChild(div);
         chatLog.scrollTop = chatLog.scrollHeight;
         return div;
     }
+
+    // --- AI Interaction Logic (Uses .text() for plain text response) ---
     async function handleSend() {
+        // ... (Keep existing handleSend logic here, which is too long to repeat, but ensure it uses the logic from the last correct step, i.e., fetching the text response) ...
         const text = input.value.trim();
         if (!text) return;
 
@@ -256,26 +239,21 @@
         const loadingMsg = addMessage('AI is typing...', 'ai-msg');
 
         try {
-            // 1. Send request to the secure worker proxy
             const response = await fetch(WORKER_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ message: text }) // Send simple payload
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
             });
 
             loadingMsg.remove();
             
             if (!response.ok) {
-                // If the worker returns an HTTP error, read the error body as text for debugging
                 const errorText = await response.text();
                 throw new Error(`Worker HTTP Error (${response.status}): ${errorText.substring(0, 100)}...`);
             }
             
-            // *** CRITICAL FIX: Use .text() because the Worker is now structured to send a PLAIN TEXT string ***
+            // Worker sends plain text, so we use .text()
             const data = await response.text(); 
-            
             addMessage(data, 'ai-msg');
 
         } catch (err) {
@@ -288,6 +266,74 @@
         }
     }
 
+
+    // 8. Dragging, Minimize, and Close Functions
+
+    // --- Dragging Logic ---
+    function dragElement(elmnt, dragHandle) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        
+        dragHandle.onmousedown = dragMouseDown;
+
+        function dragMouseDown(e) {
+            e = e || window.event;
+            // Prevent text selection when dragging
+            e.preventDefault();
+            // Get the mouse cursor position at startup:
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            shadow.onmouseup = closeDragElement;
+            // Call a function whenever the cursor moves:
+            shadow.onmousemove = elementDrag;
+        }
+
+        function elementDrag(e) {
+            e = e || window.event;
+            e.preventDefault();
+            // Calculate the new cursor position:
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            
+            // Set the element's new position:
+            // Ensure the element's positioning style is 'fixed' (set on the host)
+            elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+            elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            
+            // Override 'bottom' and 'right' styles set during initialization
+            elmnt.style.bottom = 'auto';
+            elmnt.style.right = 'auto';
+        }
+
+        function closeDragElement() {
+            // Stop moving when mouse button is released:
+            shadow.onmouseup = null;
+            shadow.onmousemove = null;
+        }
+    }
+    
+    // --- Minimize Logic ---
+    function toggleMinimize() {
+        guiContainer.classList.toggle('minimized');
+        if (guiContainer.classList.contains('minimized')) {
+            minBtn.textContent = '☐'; // Change to Maximize icon
+            guiRoot.style.width = '300px'; 
+            guiRoot.style.height = '40px';
+        } else {
+            minBtn.textContent = '—'; // Change back to Minimize icon
+            guiRoot.style.width = '350px';
+            guiRoot.style.height = '500px';
+        }
+    }
+
+    // --- Close Logic ---
+    function closeGui() {
+        guiRoot.remove();
+    }
+
+
+    // 9. Event Listeners
     sendBtn.addEventListener('click', handleSend);
     input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !sendBtn.disabled) {
@@ -295,4 +341,10 @@
         }
     });
 
+    // Attach control listeners
+    minBtn.addEventListener('click', toggleMinimize);
+    closeBtn.addEventListener('click', closeGui);
+
+    // Initialize dragging on the host element using the header as the handle
+    dragElement(guiRoot, guiHeader);
 })();
