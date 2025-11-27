@@ -8,17 +8,50 @@
     // --- Configuration ---
     const WORKER_URL = 'https://twilight-hill-3941.blueboltgamingyt.workers.dev';
     const GAMES_WEBSITE_URL = 'https://www.noobsplayground.space/games.html';
+    const PROXY_URL = 'https://holyub.com'; 
     // --- End Configuration ---
+    
+    // --- Default & Saved Colors ---
+    const DEFAULT_COLORS = {
+        // Base colors (Dark Discord theme)
+        '--gui-bg-main': '#2c2f33',    // Main container background
+        '--gui-bg-secondary': '#36393f', // Chat area background
+        '--gui-bg-header': '#23272a',  // Header and nav background
+        '--gui-bg-input': '#40444b',   // Input field background
+        '--gui-text-main': '#f6f6f7',  // Main text color
+        // Accent colors
+        '--gui-accent': '#7289da',     // Primary accent (send button, user messages, borders)
+        '--gui-accent-hover': '#677bc4'
+    };
+
+    // Load saved colors from local storage or use defaults
+    function loadColors() {
+        const savedColors = {};
+        for (const key in DEFAULT_COLORS) {
+            savedColors[key] = localStorage.getItem(key) || DEFAULT_COLORS[key];
+        }
+        return savedColors;
+    }
+    const currentColors = loadColors();
+    // --- End Color Setup ---
 
     // 2. Create Host and Shadow DOM
     const host = document.createElement('div');
     host.id = 'my-ai-gui-root';
-    // Prevent host from being styled by page CSS
-    host.style.all = 'initial';
-    host.style.position = 'fixed';
-    host.style.bottom = '20px';
-    host.style.right = '20px';
-    host.style.zIndex = '999999';
+    
+    // Apply initial colors to host using inline CSS variables
+    let styleVariables = '';
+    for (const [key, value] of Object.entries(currentColors)) {
+        styleVariables += `${key}: ${value} !important;`;
+    }
+    host.style.cssText = styleVariables;
+    
+    // CRITICAL STYLES ON HOST
+    host.style.setProperty('position', 'fixed', 'important');
+    host.style.setProperty('bottom', '20px', 'important');
+    host.style.setProperty('right', '20px', 'important');
+    host.style.setProperty('z-index', '999999', 'important');
+    
     document.body.appendChild(host);
 
     const shadow = host.attachShadow({ mode: 'open' });
@@ -36,18 +69,14 @@
           display: block !important;
         }
 
-        /* Basic safe reset (keeps pointer events) */
+        /* Basic safe reset */
         *, *::before, *::after {
           box-sizing: border-box;
           margin: 0;
           padding: 0;
         }
 
-        /* Restore interactivity for common controls */
-        button,
-        input,
-        [id],
-        [class] {
+        button, input, [id], [class] {
           all: unset;
           box-sizing: border-box;
           display: revert;
@@ -56,9 +85,9 @@
         button { cursor: pointer; }
         input { outline: none; }
 
-        /* Ensure drag handles and headers remain interactive */
+        /* Drag handles */
         #gui-header,
-        #game-header {
+        .floating-window-header {
           pointer-events: auto !important;
           user-select: none !important;
           cursor: grab !important;
@@ -67,29 +96,29 @@
           align-items: center;
         }
         #gui-header:active,
-        #game-header:active {
+        .floating-window-header:active {
           cursor: grabbing !important;
         }
         .header-controls button,
-        #game-header .close-btn {
+        .floating-window-header .close-btn {
           pointer-events: auto !important;
           cursor: pointer !important;
         }
 
-        /* UI container is positioned fixed (so moving left/top works) */
+        /* UI container styles using CSS variables */
         .container {
           width: 320px;
           height: 480px;
-          background-color: #2c2f33;
-          color: #f6f6f7;
+          background-color: var(--gui-bg-main);
+          color: var(--gui-text-main);
           border-radius: 10px;
           display: grid;
           grid-template-rows: 40px 1fr 50px 60px;
           box-shadow: 0 8px 16px rgba(0,0,0,0.4);
           overflow: hidden;
-          border: 1px solid #444;
+          border: 1px solid var(--gui-bg-main);
           transition: height 0.3s, width 0.3s;
-          position: fixed; /* IMPORTANT: fixed so left/top move it in viewport */
+          position: fixed;
           left: auto;
           top: auto;
         }
@@ -97,14 +126,12 @@
         /* Header / drag bar */
         #gui-header {
           padding: 0 10px;
-          background-color: #23272a;
-          color: #ffffff;
+          background-color: var(--gui-bg-header);
+          color: var(--gui-text-main);
           border-top-left-radius: 10px;
           border-top-right-radius: 10px;
         }
         .header-controls button {
-          background: none;
-          border: none;
           color: #99aab5;
           font-weight: bold;
           font-size: 16px;
@@ -116,9 +143,7 @@
 
         /* Minimized */
         .minimized { height: 40px; width: 320px; }
-        .minimized .chat-area,
-        .minimized .input-area,
-        .minimized .nav-bar { display: none; }
+        .minimized .chat-area, .minimized .input-area, .minimized .nav-bar { display: none; }
 
         /* Chat area */
         .chat-area {
@@ -127,21 +152,23 @@
           display: flex;
           flex-direction: column;
           gap: 8px;
-          background-color: #36393f;
+          background-color: var(--gui-bg-secondary);
         }
 
         .message-wrapper { display: flex; width: 100%; }
-        .message { padding: 8px 12px; border-radius: 18px; font-size: 13px; line-height: 1.4; word-wrap: break-word; width: fit-content; max-width: 75%; }
+        .message { 
+          padding: 8px 12px; border-radius: 18px; font-size: 13px; line-height: 1.4; word-wrap: break-word; width: fit-content; max-width: 75%; 
+        }
         .user-msg-wrapper { justify-content: flex-end; }
         .ai-msg-wrapper { justify-content: flex-start; }
 
-        .user-msg { background-color: #7289da; color: white; border-bottom-right-radius: 4px; }
-        .ai-msg { background-color: #4f545c; color: #ffffff; border-bottom-left-radius: 4px; }
+        .user-msg { background-color: var(--gui-accent); color: white; border-bottom-right-radius: 4px; }
+        .ai-msg { background-color: #4f545c; color: var(--gui-text-main); border-bottom-left-radius: 4px; }
 
         /* Input & nav */
         .input-area {
           padding: 8px 10px;
-          background-color: #2f3136;
+          background-color: var(--gui-bg-secondary);
           display: flex;
           gap: 5px;
         }
@@ -150,12 +177,12 @@
           padding: 8px 12px;
           border-radius: 20px;
           border: 1px solid #444;
-          background: #40444b;
+          background: var(--gui-bg-input);
           color: white;
           font-size: 14px;
         }
         button.send-btn {
-          background: #7289da;
+          background: var(--gui-accent);
           border: none;
           color: white;
           padding: 8px 15px;
@@ -163,22 +190,17 @@
           font-weight: bold;
           transition: background 0.2s;
         }
-        button.send-btn:hover { background: #677bc4; }
+        button.send-btn:hover { background: var(--gui-accent-hover); }
 
         .nav-bar {
           height: 60px;
-          background-color: #23272a;
+          background-color: var(--gui-bg-header);
           display: flex;
           justify-content: space-around;
           align-items: center;
-          border-top: 1px solid #36393f;
+          border-top: 1px solid var(--gui-bg-secondary);
         }
         .nav-btn {
-          background: none;
-          border: none;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
           opacity: 0.8;
           color: #99aab5;
           font-size: 10px;
@@ -186,38 +208,93 @@
         }
         .nav-btn:hover { opacity: 1; color: white; }
         .nav-btn svg { width: 20px; height: 20px; fill: currentColor; margin-bottom: 2px; }
-        .discord-btn svg { fill: #7289da; }
-
-        /* Game library window */
-        #game-library-window {
+        .discord-btn svg { fill: var(--gui-accent); }
+        
+        /* Floating Window Styles (Shared for Games, Proxy, Settings) */
+        .floating-window {
           position: fixed;
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
           width: 800px;
           height: 600px;
-          background-color: #23272a;
+          background-color: var(--gui-bg-header);
           border-radius: 15px;
           box-shadow: 0 15px 30px rgba(0,0,0,0.7);
           z-index: 1000000;
           display: grid;
           grid-template-rows: 40px 1fr;
           overflow: hidden;
-          border: 2px solid #7289da;
+          border: 2px solid var(--gui-accent);
         }
-
-        #game-header {
-          background-color: #2c2f33;
-          color: white;
+        
+        #settings-panel {
+            width: 350px;
+            height: 300px;
+            grid-template-rows: 40px 1fr;
+        }
+        
+        /* Window Header Styles (Shared) */
+        .floating-window-header {
+          background-color: var(--gui-bg-main);
+          color: var(--gui-text-main);
           padding: 0 10px;
           font-size: 18px;
           font-weight: bold;
         }
-        #game-header .close-btn { color: #99aab5; font-size: 20px; padding: 5px; }
-        #game-header .close-btn:hover { color: #ff0000; }
 
-        #game-iframe-container { width: 100%; height: 100%; }
-        #game-iframe-container iframe { width: 100%; height: 100%; border: none; display: block; }
+        /* Settings Content */
+        .settings-content {
+            padding: 20px;
+            background-color: var(--gui-bg-secondary);
+            color: var(--gui-text-main);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .setting-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid #4f545c;
+        }
+        .setting-group label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        /* Custom Color Input Styling */
+        .color-input-wrapper {
+            width: 40px;
+            height: 25px;
+            border: 2px solid var(--gui-accent);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        .color-input-wrapper input[type="color"] {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            width: 150%;
+            height: 150%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .color-swatch {
+            width: 100%;
+            height: 100%;
+            border-radius: 2px;
+            pointer-events: none; /* Let clicks pass through to the input */
+            transition: background-color 0.2s;
+        }
+
+
+        /* Iframe Styles */
+        .iframe-container { width: 100%; height: 100%; }
+        .iframe-container iframe { width: 100%; height: 100%; border: none; display: block; }
 
         /* Markdown */
         .markdown-content ul { list-style-type: disc; padding-left: 20px; margin: 5px 0; }
@@ -253,14 +330,14 @@
         </div>
         <div class="nav-bar">
             <button class="nav-btn" title="Games" id="game-library-btn"><svg viewBox="0 0 24 24">${icons.game}</svg>Games</button>
-            <button class="nav-btn" title="Browser" id="browser-btn"><svg viewBox="0 0 24 24">${icons.browser}</svg>Browser</button>
+            <button class="nav-btn" title="Proxy Browser" id="browser-btn"><svg viewBox="0 0 24 24">${icons.browser}</svg>Browser</button>
             <button class="nav-btn" title="Settings" id="settings-btn"><svg viewBox="0 0 24 24">${icons.settings}</svg>Settings</button>
             <button class="nav-btn discord-btn" title="Discord" id="discord-btn"><svg viewBox="0 0 24 24">${icons.discord}</svg>Discord</button>
         </div>
     `;
     shadow.appendChild(container);
 
-    // 6. Query elements (after appended)
+    // 6. Query elements
     const chatLog = shadow.getElementById('chat-log');
     const input = shadow.getElementById('user-input');
     const sendBtn = shadow.getElementById('send-btn');
@@ -273,11 +350,10 @@
     const settingsBtn = shadow.getElementById('settings-btn');
     const discordBtn = shadow.getElementById('discord-btn');
 
-    // 7. Message rendering
+    // 7. Message rendering (same as before)
     function addMessage(text, type) {
         const wrapper = document.createElement('div');
         wrapper.className = `message-wrapper ${type}-wrapper`;
-
         const div = document.createElement('div');
         div.className = `message ${type} markdown-content`;
 
@@ -299,7 +375,7 @@
         return div;
     }
 
-    // 8. AI interaction
+    // 8. AI interaction (same as before)
     async function handleSend() {
         const text = input.value.trim();
         if (!text) return;
@@ -338,93 +414,204 @@
             input.focus();
         }
     }
-
-    // 9. Game library (iframe)
-    function showGameLibrary() {
-        if (shadow.getElementById('game-library-window')) return;
-
-        if (!GAMES_WEBSITE_URL || GAMES_WEBSITE_URL === 'https://example.com/your-games-homepage/') {
-            alert("Error: Please update the GAMES_WEBSITE_URL variable in gui.js with your actual games website link.");
-            return;
-        }
-
-        const libraryWindow = document.createElement('div');
-        libraryWindow.id = 'game-library-window';
-        libraryWindow.innerHTML = `
-            <div id="game-header">
-                <span>🎮 Games Library (Embedded)</span>
-                <button class="close-btn" id="game-close-btn">x</button>
+    
+    // 9. Floating Window Creator (shared logic for Games, Proxy, Settings)
+    function createFloatingWindow(id, title, innerHTML, width = '800px', height = '600px') {
+        if (shadow.getElementById(id)) return;
+        
+        const floatingWindow = document.createElement('div');
+        floatingWindow.id = id;
+        floatingWindow.className = 'floating-window'; 
+        floatingWindow.style.width = width;
+        floatingWindow.style.height = height;
+        
+        floatingWindow.innerHTML = `
+            <div class="floating-window-header">
+                <span>${title}</span>
+                <button class="close-btn" id="${id}-close-btn">x</button>
             </div>
-            <div id="game-iframe-container">
+            ${innerHTML}
+        `;
+        
+        shadow.appendChild(floatingWindow);
+        
+        // Setup Dragging
+        const header = floatingWindow.querySelector('.floating-window-header');
+        dragElement(floatingWindow, header);
+
+        // Close button listener
+        shadow.getElementById(`${id}-close-btn`).addEventListener('click', () => {
+            floatingWindow.remove();
+        });
+        
+        return floatingWindow;
+    }
+
+    // 9a. Game library (iframe)
+    function showGameLibrary() {
+        const iframeHTML = `
+            <div class="iframe-container">
                 <iframe src="${GAMES_WEBSITE_URL}"></iframe>
             </div>
         `;
-        shadow.appendChild(libraryWindow);
-
-        // Make the new window draggable (drag the libraryWindow inside shadow)
-        const gameHeader = shadow.getElementById('game-header');
-        dragElement(libraryWindow, gameHeader);
-
-        // Close button
-        shadow.getElementById('game-close-btn').addEventListener('click', () => {
-            libraryWindow.remove();
-        });
+        if (!GAMES_WEBSITE_URL || GAMES_WEBSITE_URL.includes('your-games-homepage')) {
+             alert("Error: Please update the GAMES_WEBSITE_URL variable.");
+             return;
+        }
+        createFloatingWindow('game-library-window', '🎮 Games Library (Embedded)', iframeHTML, '800px', '600px');
+    }
+    
+    // 9b. Proxy Browser (iframe)
+    function showProxyWindow() {
+        const iframeHTML = `
+            <div class="iframe-container">
+                <iframe src="${PROXY_URL}"></iframe>
+            </div>
+        `;
+        if (!PROXY_URL || PROXY_URL.includes('holyub.com')) {
+             alert("Error: Please update the PROXY_URL variable with your actual link.");
+             return;
+        }
+        createFloatingWindow('proxy-browser-window', '🌐 Proxy Browser', iframeHTML, '800px', '600px');
     }
 
-    // 10. Dragging - robust pointer-based handler for elements INSIDE the shadow root
-    	function dragElement(elmnt, dragHandle) {
-		let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-		
-		dragHandle.onmousedown = dragMouseDown;
+    // ⭐ 9c. Settings Panel (NEW) ⭐
+    function applyColor(cssVariable, color) {
+        // 1. Update the host element (main GUI and its shadows)
+        host.style.setProperty(cssVariable, color, 'important');
+        
+        // 2. Save the new color
+        localStorage.setItem(cssVariable, color);
+    }
+    
+    function showSettingsPanel() {
+        const savedAccent = localStorage.getItem('--gui-accent') || DEFAULT_COLORS['--gui-accent'];
+        const savedBg = localStorage.getItem('--gui-bg-main') || DEFAULT_COLORS['--gui-bg-main'];
+        
+        const contentHTML = `
+            <div class="settings-content">
+                <h3>Theme Customization</h3>
+                <div class="setting-group">
+                    <label for="bg-color-input">Background Color:</label>
+                    <div class="color-input-wrapper">
+                        <div class="color-swatch" style="background-color: ${savedBg};"></div>
+                        <input type="color" id="bg-color-input" value="${savedBg}" data-variable="--gui-bg-main">
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <label for="accent-color-input">Accent Color:</label>
+                    <div class="color-input-wrapper">
+                        <div class="color-swatch" style="background-color: ${savedAccent};"></div>
+                        <input type="color" id="accent-color-input" value="${savedAccent}" data-variable="--gui-accent">
+                    </div>
+                </div>
+            </div>
+        `;
 
-		function dragMouseDown(e) {
-			e = e || window.event;
-			e.preventDefault();
-			
-			pos3 = e.clientX;
-			pos4 = e.clientY;
-			
-			window.onmouseup = closeDragElement;
-			window.onmousemove = elementDrag;
-			
-			document.body.style.cursor = 'grabbing';
-			dragHandle.style.cursor = 'grabbing';
-		}
+        const panel = createFloatingWindow('settings-panel', '⚙️ Settings', contentHTML, '350px', '300px');
+        if (!panel) return;
+        
+        // Add listeners to color pickers
+        panel.addEventListener('input', (e) => {
+            const input = e.target;
+            if (input.type === 'color') {
+                const variable = input.getAttribute('data-variable');
+                const color = input.value;
+                
+                // Update the visible swatch next to the picker
+                const swatch = input.closest('.color-input-wrapper').querySelector('.color-swatch');
+                if (swatch) swatch.style.backgroundColor = color;
+                
+                // Apply color changes
+                if (variable === '--gui-accent') {
+                    // Calculate a slightly darker hover color for a good UX
+                    const darken = (hex, percent) => {
+                        let num = parseInt(hex.slice(1), 16), amt = Math.round(2.55 * percent);
+                        let R = (num >> 16) - amt;
+                        let G = (num >> 8 & 0x00FF) - amt;
+                        let B = (num & 0x0000FF) - amt;
+                        return `#${(0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).slice(1)}`;
+                    };
+                    const hoverColor = darken(color, -10); // Darken by 10%
+                    applyColor(variable, color);
+                    applyColor('--gui-accent-hover', hoverColor);
+                } else if (variable === '--gui-bg-main') {
+                    // If the main background changes, also update the header/window color to match, 
+                    // and slightly darken the secondary area (chat log)
+                    const darken = (hex, percent) => {
+                         let num = parseInt(hex.slice(1), 16), amt = Math.round(2.55 * percent);
+                         let R = (num >> 16) + amt;
+                         let G = (num >> 8 & 0x00FF) + amt;
+                         let B = (num & 0x0000FF) + amt;
+                         return `#${(0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).slice(1)}`;
+                    };
 
-		function elementDrag(e) {
-			e = e || window.event;
-			e.preventDefault();
-			
-			pos1 = pos3 - e.clientX;
-			pos2 = pos4 - e.clientY;
-			pos3 = e.clientX;
-			pos4 = e.clientY;
-			
-			// Allow the element to be moved relative to its current screen position
-			elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-			elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
-			
-			// Clear fixed positioning properties (bottom/right) if they exist
-			elmnt.style.bottom = 'auto';
-			elmnt.style.right = 'auto';
-			
-			// If it was the Game Library window, clear the transform property
-			if (elmnt.id === 'game-library-window') {
-				elmnt.style.transform = 'none';
-			}
-		}
+                    const headerColor = darken(color, -5); // Slightly darker
+                    const secondaryColor = darken(color, 5); // Slightly lighter for contrast
 
-		function closeDragElement() {
-			window.onmouseup = null;
-			window.onmousemove = null;
-			
-			document.body.style.cursor = 'default';
-			dragHandle.style.cursor = 'grab';
-		}
-	}
+                    applyColor(variable, color);
+                    applyColor('--gui-bg-header', headerColor);
+                    applyColor('--gui-bg-secondary', secondaryColor);
+                    applyColor('--gui-bg-input', darken(color, 10)); // Darken input a bit more
+                }
+            }
+        });
+        
+    }
+    // ⭐ END Settings Panel ⭐
 
 
-    // 11. Minimize & close
+    // 10. Dragging (same as before)
+    function dragElement(elmnt, dragHandle) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        
+        dragHandle.onmousedown = dragMouseDown;
+
+        function dragMouseDown(e) {
+            e = e || window.event;
+            e.preventDefault();
+            
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            
+            window.onmouseup = closeDragElement;
+            window.onmousemove = elementDrag;
+            
+            document.body.style.cursor = 'grabbing';
+            dragHandle.style.cursor = 'grabbing !important';
+        }
+
+        function elementDrag(e) {
+            e = e || window.event;
+            e.preventDefault();
+            
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            
+            elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+            elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            
+            elmnt.style.bottom = 'auto';
+            elmnt.style.right = 'auto';
+            
+            if (elmnt.classList.contains('floating-window')) {
+                elmnt.style.transform = 'none';
+            }
+        }
+
+        function closeDragElement() {
+            window.onmouseup = null;
+            window.onmousemove = null;
+            
+            document.body.style.cursor = 'default';
+            dragHandle.style.cursor = 'grab !important';
+        }
+    }
+
+
+    // 11. Minimize & close (same as before, closing all floating windows)
     function toggleMinimize() {
         guiContainer.classList.toggle('minimized');
         if (guiContainer.classList.contains('minimized')) {
@@ -436,6 +623,7 @@
 
     function closeGui() {
         host.remove();
+        shadow.querySelectorAll('.floating-window').forEach(win => win.remove());
     }
 
     // 12. Wire up events
@@ -445,14 +633,13 @@
     });
 
     gameLibraryBtn.addEventListener('click', showGameLibrary);
-    browserBtn.addEventListener('click', () => console.log('Browser Clicked: Add your browser/proxy logic here.'));
-    settingsBtn.addEventListener('click', () => alert('Settings Clicked: Implement your GUI settings here.'));
+    browserBtn.addEventListener('click', showProxyWindow);
+    settingsBtn.addEventListener('click', showSettingsPanel); // ⭐ ATTACHED SETTINGS LOGIC HERE ⭐
     discordBtn.addEventListener('click', () => window.open('https://discord.com', '_blank'));
 
     minBtn.addEventListener('click', toggleMinimize);
     closeBtn.addEventListener('click', closeGui);
 
-    // IMPORTANT: initialize dragging on the container (INSIDE shadow)
-    // Use container (inside shadow) as the element to move; header inside shadow as the handle
+    // Initialize dragging on the main GUI container
     dragElement(guiContainer, guiHeader);
 })();
