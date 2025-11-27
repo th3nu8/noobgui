@@ -10,6 +10,18 @@
     const GAMES_WEBSITE_URL = 'https://www.noobsplayground.space/games.html';
     const PROXY_URL = 'https://scramjet.mercurywork.shop/'; 
     
+    // ⭐ Dead Simple Chat Embed ⭐
+    const DEAD_SIMPLE_CHAT_IFRAME_HTML = `
+        <iframe 
+            src="https://deadsimplechat.com/6Z5TGAHW9" 
+            width="100%" 
+            height="100%" 
+            frameborder="0"
+            style="border: none; display: block;">
+        </iframe>
+    `;
+    // ⭐ End Chat Embed ⭐
+
     // ⭐ Partner Links Configuration ⭐
     const PARTNER_LINKS = [
         { name: "t9 OS", url: "https://t9os.vercel.app" },
@@ -27,7 +39,7 @@
         '--gui-bg-input': '#40444b',   
         '--gui-text-main': '#f6f6f7',  
         // Accent colors
-        '--gui-accent': '#7289da',     
+        '--gui-accent': '#7289da',      
         '--gui-accent-hover': '#677bc4'
     };
 
@@ -402,20 +414,18 @@
             height: 450px;
         }
 
-        /* ⭐ NEW: User Chat Window Size and Grid Layout ⭐ */
+        /* ⭐ User Chat Window Size for Iframe ⭐ */
         #chat-window {
             width: 450px;
             height: 650px;
-            display: grid; /* Overrides default floating-window grid-template-rows */
-            grid-template-rows: 40px 1fr; 
+            grid-template-rows: 40px 1fr; /* Header + Iframe Content */
         }
         #chat-window-content {
-            display: grid;
-            grid-template-rows: 1fr 50px;
-            overflow: hidden;
+            /* This is the container for the iframe */
+            width: 100%;
             height: 100%;
         }
-        /* ⭐ END NEW ⭐ */
+        /* ⭐ END NEW CHAT STYLES ⭐ */
 
         /* Window Header Styles (Shared) */
         .floating-window-header {
@@ -564,6 +574,14 @@
         /* Markdown */
         .markdown-content ul { list-style-type: disc; padding-left: 20px; margin: 5px 0; }
         .markdown-content li { margin-bottom: 5px; padding-left: 5px; }
+        .markdown-content pre { 
+            background: #23272a; 
+            padding: 10px; 
+            border-radius: 5px; 
+            overflow-x: auto; 
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
     `;
     shadow.appendChild(style);
 
@@ -573,7 +591,7 @@
         chat: '<path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 14v-2h8v2H6zm10-3H6V9h10v2z"/>',
         game: '<path d="M21,6H3C1.9,6,1,6.9,1,8v8c0,1.1,0.9,2,2,2h18c1.1,0,2-0.9,2-2V8C23,6.9,22.1,6,21,6z M10,13H8v2H6v-2H4v-2h2V9h2v2h2V13z M14,13.5c-0.83,0-1.5-0.67-1.5-1.5s0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5S14.83,13.5,14,13.5z M18,10.5c-0.83,0-1.5-0.67-1.5-1.5s0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5S18.83,10.5,18,10.5z"/>',
         browser: '<path d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M11,19.93C7.05,19.44,4,16.08,4,12s3.05-7.44,7-7.93V19.93z M13,4.07C16.95,4.56,20,7.92,20,12s-3.05,7.44-7,7.93V4.07z"/>',
-        link: '<path d="M17,7h-4V5h4c1.65,0,3,1.35,3,3v8c0,1.65-1.35,3-3,3h-4v-2h4c0.55,0,1-0.45,1-1V8C18,7.45,17.55,7,17,7z M8,5C6.35,5,5,6.35,5,8v8c0,0.55,0.45,1,1,1h4v2H6c-1.65,0-3-1.35-3-3V8C3,6.35,4.35,5,6,5H8z M15,11h-6V9h6V11z"/>',
+        link: '<path d="M17,7h-4V5h4c1.65,0,3,1.35,3,3v8c0,1.65-1.35,3-3,3h-4v-2h4c0.55,0,1-0.45,1-1V8C18,7.45,17.55,7,17,7z M8,5C6.35,5,5,6.35,5,8v8c0,0.55,0.45,1,1,1h4v-2H6c-1.65,0-3-1.35-3-3V8C3,6.35,4.35,5,6,5H8z M15,11h-6V9h6V11z"/>',
         settings: '<path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>',
         discord: '<path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.2 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.05-.04.09c.32.61.68 1.19 1.07 1.74c.03.01.06.02.09.01c1.72-.53 3.45-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.6-8.5-3.26-12.06a.06.06 0 0 0-.02-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.85 2.12-1.89 2.12z"/>',
         fullscreen: '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>',
@@ -780,26 +798,7 @@
             inputElement.focus();
         }
     }
-
-    // ⭐ User-to-User Chat Handler (Simulated) ⭐
-    function handleUserChatSend(inputElement, sendBtnElement, logElement) {
-        const text = inputElement.value.trim();
-        if (!text) return;
-
-        // 1. User sends message
-        addMessage(text, 'user-msg', logElement);
-        inputElement.value = '';
-
-        // 2. Simulate friend response (uses 'ai-msg' style for contrast)
-        setTimeout(() => {
-            const friendResponse = `I received your message: **"${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"** (This is a simulated response.)`;
-            addMessage(friendResponse, 'ai-msg', logElement);
-        }, 1500);
-        
-        inputElement.focus();
-    }
-    // ⭐ END NEW CHAT HANDLER ⭐
-
+    
     // 8. AI interaction (main UI)
     sendBtn.addEventListener('click', () => handleAISend(input, sendBtn, chatLog));
     input.addEventListener('keypress', (e) => {
@@ -852,363 +851,291 @@
         if (shadow.getElementById(id)) return;
         
         // Ensure only one non-utility window is open at a time (except settings/partners)
-        shadow.querySelectorAll('.floating-window:not(#settings-panel):not(#partners-window)').forEach(win => {
-             // Only close if it's NOT the chat-window being opened (prevents flicker if re-opening)
-             if (win.id !== id) {
-                if (getFullscreenElement() === win) {
+        shadow.querySelectorAll('.floating-window').forEach(win => {
+            if (win.id !== 'settings-panel' && win.id !== 'partners-window') {
+                 if (getFullscreenElement() === win) {
                     document.exitFullscreen();
-                }
+                 }
                 win.remove();
-             }
-        });
-        
-        const floatingWindow = document.createElement('div');
-        floatingWindow.id = id;
-        floatingWindow.className = 'floating-window'; 
-        floatingWindow.style.width = width;
-        floatingWindow.style.height = height;
-        
-        floatingWindow.innerHTML = `
-            <div class="floating-window-header">
-                <span>${title}</span>
-                <div class="window-controls">
-                    ${controls}
-                    <button class="close-btn" id="${id}-close-btn">x</button>
-                </div>
-            </div>
-            ${innerHTML}
-        `;
-        
-        shadow.appendChild(floatingWindow);
-        
-        // Setup Dragging
-        const header = floatingWindow.querySelector('.floating-window-header');
-        dragElement(floatingWindow, header);
-
-        // Close button listener
-        shadow.getElementById(`${id}-close-btn`).addEventListener('click', () => {
-            if (getFullscreenElement() === floatingWindow) {
-                document.exitFullscreen();
             }
-            floatingWindow.remove();
-            
-            // NOTE: Removed logic to restore the main chat visibility, as it is no longer hidden
         });
+
+        const windowDiv = document.createElement('div');
+        windowDiv.id = id;
+        windowDiv.className = 'floating-window';
+        windowDiv.style.width = width;
+        windowDiv.style.height = height;
         
-        return floatingWindow;
-    }
-    
-    // ⭐ Function to open the User Chat Window - No longer hides main chat ⭐
-    function openChatWindow() {
-        if (shadow.getElementById('chat-window')) return;
-
-        // HTML structure for the new user chat UI
-        const chatWindowHTML = `
-            <div id="chat-window-content">
-                <div class="chat-area" id="user-chat-log">
-                    <div class="message-wrapper ai-msg-wrapper"><div class="message ai-msg">
-                        **Welcome to User Chat!** Since this is a client-side script, 
-                        your messages will be echoed back as a simulated "Friend" response.
-                    </div></div>
-                </div>
-                
-                <div class="input-area">
-                    <input type="text" id="user-chat-input" placeholder="Chat with friend..." />
-                    <button class="send-btn" id="user-chat-send-btn">Send</button>
-                </div>
-            </div>
-        `;
-
-        // Create the window
-        const chatWindow = createFloatingWindow('chat-window', '💬 User Chat', chatWindowHTML, '450px', '650px');
-        if (!chatWindow) return;
-
-        // Get elements from the new shadow-dom window
-        const userChatInput = chatWindow.querySelector('#user-chat-input');
-        const userChatSendBtn = chatWindow.querySelector('#user-chat-send-btn');
-        const userChatLog = chatWindow.querySelector('#user-chat-log');
-
-        // Attach event listeners to the new chat controls
-        userChatSendBtn.addEventListener('click', () => handleUserChatSend(userChatInput, userChatSendBtn, userChatLog));
-        userChatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleUserChatSend(userChatInput, userChatSendBtn, userChatLog);
-        });
-        userChatInput.focus(); 
-    }
-    // ⭐ END MODIFIED CHAT WINDOW FUNCTION ⭐
-
-    // 9a. Game library (iframe)
-    function showGameLibrary() {
-        const url = GAMES_WEBSITE_URL;
-        if (!url || url.includes('your-games-homepage')) {
-            alert("Error: Please update the GAMES_WEBSITE_URL variable.");
-            return;
-        }
-
-        const openInNewTab = getSetting('open-in-new-tab', false);
-
-        if (openInNewTab) {
-            const newWindow = window.open('about:blank', '_blank');
-            if (newWindow) {
-                newWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Games Library</title>
-                        <style>
-                            body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
-                            iframe { border: none; width: 100%; height: 100%; display: block; }
-                        </style>
-                    </head>
-                    <body>
-                        <iframe src="${url}"></iframe>
-                    </body>
-                    </html>
-                `);
-                newWindow.document.close();
-            } else {
-                alert("Could not open new tab. Please allow pop-ups for this site.");
-            }
-        } else {
-            const iframeHTML = `<div class="iframe-container"><iframe src="${url}"></iframe></div>`;
-            createFloatingWindow('game-library-window', '🎮 Games', iframeHTML, '800px', '600px');
-        }
-    }
-    
-    // 9b. Proxy Browser (iframe)
-    function showProxyWindow() {
-        const url = PROXY_URL;
-        if (!url || url.includes('holyub.com')) {
-            alert("Error: Please update the PROXY_URL variable with your actual link.");
-            return;
-        }
-        
-        const openInNewTab = getSetting('open-in-new-tab', false);
-
-        if (openInNewTab) {
-            const newWindow = window.open('about:blank', '_blank');
-            if (newWindow) {
-                newWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Proxy Browser</title>
-                        <style>
-                            body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
-                            iframe { border: none; width: 100%; height: 100%; display: block; }
-                        </style>
-                    </head>
-                    <body>
-                        <iframe src="${url}" allow="fullscreen" allowfullscreen></iframe>
-                    </body>
-                    </html>
-                `);
-                newWindow.document.close();
-            } else {
-                alert("Could not open new tab. Please allow pop-ups for this site.");
-            }
-            return;
-        }
-        
-        const iframeHTML = `<div class="iframe-container"><iframe id="proxy-iframe" src="${url}" allow="fullscreen" allowfullscreen></iframe></div>`;
-        
-        const controls = `
-            <button id="proxy-fullscreen-btn" title="Fullscreen">
+        // Default controls: Fullscreen, Close
+        const defaultControls = `
+            <button class="fullscreen-btn" title="Toggle Fullscreen">
                 <svg viewBox="0 0 24 24">${icons.fullscreen}</svg>
             </button>
+            <button class="close-btn" title="Close">
+                <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+        `;
+
+        windowDiv.innerHTML = `
+            <div class="floating-window-header" id="${id}-header">
+                <span class="window-title">${title}</span>
+                <div class="window-controls">
+                    ${controls || defaultControls}
+                </div>
+            </div>
+            <div id="${id}-content">${innerHTML}</div>
         `;
         
-        const panel = createFloatingWindow('proxy-browser-window', '🌐 Browser', iframeHTML, '800px', '600px', controls);
-        if (!panel) return;
-        
-        const fsBtn = shadow.getElementById('proxy-fullscreen-btn');
-        const fullscreenChangeHandler = () => {
-             const isFullscreen = getFullscreenElement() === panel;
-             if (isFullscreen) {
-                fsBtn.innerHTML = `<svg viewBox="0 0 24 24">${icons.exitFullscreen}</svg>`;
-                fsBtn.title = "Exit Fullscreen";
-             } else {
-                fsBtn.innerHTML = `<svg viewBox="0 0 24 24">${icons.fullscreen}</svg>`;
-                fsBtn.title = "Fullscreen";
-             }
-        };
+        shadow.appendChild(windowDiv);
 
-        fsBtn.addEventListener('click', () => {
-            toggleFullscreen(panel);
+        const header = shadow.getElementById(`${id}-header`);
+        dragElement(windowDiv, header);
+
+        // Close button listener
+        windowDiv.querySelector('.close-btn').addEventListener('click', () => {
+             if (getFullscreenElement() === windowDiv) {
+                document.exitFullscreen();
+             }
+            windowDiv.remove();
         });
 
-        shadow.ownerDocument.addEventListener('fullscreenchange', fullscreenChangeHandler);
-        shadow.ownerDocument.addEventListener('webkitfullscreenchange', fullscreenChangeHandler);
-        shadow.ownerDocument.addEventListener('mozfullscreenchange', fullscreenChangeHandler);
-    }
-
-    // 9c. Partners Window
-    function showPartnersWindow() {
-        let linksHTML = `<h3>Community & Partner Links</h3>`;
-        
-        if (PARTNER_LINKS.length === 0) {
-            linksHTML += '<p>No partner links configured. Please edit the PARTNER_LINKS array in the script.</p>';
-        } else {
-            PARTNER_LINKS.forEach(partner => {
-                linksHTML += `
-                    <div class="partner-link-item">
-                        <a href="${partner.url}" target="_blank" rel="noopener noreferrer">${partner.name}</a>
-                    </div>
-                `;
+        // Fullscreen button listener
+        const fullscreenBtn = windowDiv.querySelector('.fullscreen-btn');
+        if (fullscreenBtn) {
+            fullscreenBtn.addEventListener('click', () => {
+                toggleFullscreen(windowDiv);
+                
+                // Update icon when state changes (requires listener on document)
+                const updateIcon = () => {
+                    if (getFullscreenElement() === windowDiv) {
+                        fullscreenBtn.innerHTML = `<svg viewBox="0 0 24 24">${icons.exitFullscreen}</svg>`;
+                        windowDiv.classList.add('is-fullscreen');
+                    } else {
+                        fullscreenBtn.innerHTML = `<svg viewBox="0 0 24 24">${icons.fullscreen}</svg>`;
+                        windowDiv.classList.remove('is-fullscreen');
+                    }
+                };
+                
+                // Listen globally for fullscreen changes
+                const doc = windowDiv.ownerDocument;
+                doc.removeEventListener('fullscreenchange', updateIcon);
+                doc.addEventListener('fullscreenchange', updateIcon);
+                doc.removeEventListener('webkitfullscreenchange', updateIcon);
+                doc.addEventListener('webkitfullscreenchange', updateIcon);
             });
         }
-
-        const contentHTML = `<div class="partners-content">${linksHTML}</div>`;
-
-        createFloatingWindow('partners-window', '🔗 Partners', contentHTML, '400px', '450px');
+        
+        return windowDiv;
     }
 
-    // 9d. Settings Panel
-    function applyColor(cssVariable, color) {
-        host.style.setProperty(cssVariable, color, 'important');
-        localStorage.setItem(cssVariable, color);
+    // 10. Utility: Open Specific Windows
+    function openGamesWindow() {
+        createFloatingWindow(
+            'games-window',
+            'Noobs Playground Games',
+            `<div class="iframe-container"><iframe src="${GAMES_WEBSITE_URL}"></iframe></div>`
+        );
+        closeDropdown();
+    }
+
+    function openProxyWindow() {
+        createFloatingWindow(
+            'proxy-window',
+            'Web Proxy',
+            `<div class="iframe-container"><iframe src="${PROXY_URL}"></iframe></div>`
+        );
+        closeDropdown();
     }
     
-    function showSettingsPanel() {
-        const savedAccent = localStorage.getItem('--gui-accent') || DEFAULT_COLORS['--gui-accent'];
-        const savedBg = localStorage.getItem('--gui-bg-main') || DEFAULT_COLORS['--gui-bg-main'];
-        const openInNewTabChecked = getSetting('open-in-new-tab', false) ? 'checked' : '';
+    // ⭐ NEW: Open Dead Simple Chat Window ⭐
+    function openUserChatWindow() {
+        // ID: 'chat-window' is used for styling
+        createFloatingWindow(
+            'chat-window',
+            'Public Chat Room',
+            `<div id="chat-window-content" class="iframe-container">${DEAD_SIMPLE_CHAT_IFRAME_HTML}</div>`,
+            '450px',
+            '650px'
+        );
+        closeDropdown();
+    }
+
+    function openPartnersWindow() {
+        const linksHtml = PARTNER_LINKS.map(p => `
+            <div class="partner-link-item"><a href="${p.url}" target="_blank">${p.name}</a></div>
+        `).join('');
+
+        createFloatingWindow(
+            'partners-window',
+            'Partner Links',
+            `<div class="partners-content">
+                <h3>Our Friends</h3>
+                <p>Check out our partners' cool projects!</p>
+                ${linksHtml}
+            </div>`,
+            '400px',
+            '450px',
+            // Simple close button only
+            `<button class="close-btn" title="Close">
+                <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>`
+        );
+        closeDropdown();
+    }
+
+    // 11. Dropdown Menu Logic
+    function populateDropdown() {
+        dropdownContent.innerHTML = `
+            <button id="menu-chat-btn">
+                <svg viewBox="0 0 24 24">${icons.chat}</svg>
+                Public Chat
+            </button>
+            <button id="menu-games-btn">
+                <svg viewBox="0 0 24 24">${icons.game}</svg>
+                Games
+            </button>
+            <button id="menu-proxy-btn">
+                <svg viewBox="0 0 24 24">${icons.browser}</svg>
+                Web Proxy
+            </button>
+            <hr style="border-color: #4f545c; margin: 5px 0;">
+            <button id="menu-partners-btn">
+                <svg viewBox="0 0 24 24">${icons.link}</svg>
+                Partners
+            </button>
+            <button id="menu-settings-btn">
+                <svg viewBox="0 0 24 24">${icons.settings}</svg>
+                Settings
+            </button>
+        `;
+
+        // Attach listeners to newly created buttons
+        shadow.getElementById('menu-chat-btn').addEventListener('click', openUserChatWindow); // ⭐ NEW LISTENER ⭐
+        shadow.getElementById('menu-games-btn').addEventListener('click', openGamesWindow);
+        shadow.getElementById('menu-proxy-btn').addEventListener('click', openProxyWindow);
+        shadow.getElementById('menu-partners-btn').addEventListener('click', openPartnersWindow);
+        shadow.getElementById('menu-settings-btn').addEventListener('click', openSettingsPanel);
+    }
+    
+    function toggleDropdown() {
+        dropdownContent.classList.toggle('show');
+    }
+
+    function closeDropdown() {
+        dropdownContent.classList.remove('show');
+    }
+
+    dropdownToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleDropdown();
+    });
+
+    shadow.ownerDocument.addEventListener('click', (e) => {
+        if (!mainDropdown.contains(e.target)) {
+            closeDropdown();
+        }
+    });
+
+    // 12. Settings Panel Logic (Same as before)
+    function saveColor(key, value) {
+        localStorage.setItem(key, value);
+        host.style.setProperty(key, value, 'important');
+    }
+
+    function openSettingsPanel() {
+        const settingsWindow = createFloatingWindow(
+            'settings-panel',
+            'Settings',
+            `<div class="settings-content" id="settings-content"></div>`,
+            '350px',
+            '350px'
+        );
+        closeDropdown();
         
-        const contentHTML = `
-            <div class="settings-content">
-                <h3>Theme Customization</h3>
+        if (!settingsWindow) return;
+
+        const content = settingsWindow.querySelector('.settings-content');
+        
+        // Color Pickers
+        const colorSettings = Object.keys(DEFAULT_COLORS).map(key => {
+            const label = key.replace('--gui-', '').replace(/-/g, ' ');
+            const currentValue = host.style.getPropertyValue(key) || DEFAULT_COLORS[key];
+            return `
                 <div class="setting-group">
-                    <label for="bg-color-input">Background Color:</label>
+                    <label>${label.charAt(0).toUpperCase() + label.slice(1)} Color</label>
                     <div class="color-input-wrapper">
-                        <div class="color-swatch" style="background-color: ${savedBg};"></div>
-                        <input type="color" id="bg-color-input" value="${savedBg}" data-variable="--gui-bg-main">
+                        <input type="color" id="color-picker-${key.slice(2)}" value="${currentValue}" data-css-var="${key}">
+                        <div class="color-swatch" style="background-color: ${currentValue};"></div>
                     </div>
                 </div>
-                <div class="setting-group">
-                    <label for="accent-color-input">Accent Color:</label>
-                    <div class="color-input-wrapper">
-                        <div class="color-swatch" style="background-color: ${savedAccent};"></div>
-                        <input type="color" id="accent-color-input" value="${savedAccent}" data-variable="--gui-accent">
-                    </div>
-                </div>
-                <hr>
-                <h3>Functionality</h3>
-                <div class="setting-group">
-                    <label for="new-tab-toggle">Open Games/Browser in New Tab</label>
-                    <label class="switch">
-                        <input type="checkbox" id="new-tab-toggle" ${openInNewTabChecked} data-setting-key="open-in-new-tab">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="setting-group">
-                    <button id="reset-colors-btn" class="send-btn" style="width: 100%; background: #f04747; margin-top: 10px;">Reset Colors</button>
-                </div>
+            `;
+        }).join('');
+        
+        // Fullscreen Toggle (If needed)
+        const currentFsPref = getSetting('gui-fullscreen-on-load', false);
+        const fullscreenSetting = `
+            <div class="setting-group">
+                <label>Fullscreen Games/Proxy on Open</label>
+                <label class="switch">
+                    <input type="checkbox" id="fs-toggle" ${currentFsPref ? 'checked' : ''}>
+                    <span class="slider"></span>
+                </label>
             </div>
         `;
 
-        const panel = createFloatingWindow('settings-panel', '⚙️ Settings', contentHTML, '350px', '350px');
-        if (!panel) return;
+        content.innerHTML = `
+            <h2>Appearance</h2>
+            ${colorSettings}
+            <hr style="border-color: #4f545c;">
+            <h2>Behavior</h2>
+            ${fullscreenSetting}
+            <button id="reset-colors-btn" style="background: #f04747; color: white; padding: 10px; border-radius: 5px; font-weight: bold; margin-top: 10px;">Reset Colors to Default</button>
+        `;
         
-        ['bg-color-input', 'accent-color-input'].forEach(id => {
-            const inputEl = shadow.getElementById(id);
-            const swatch = inputEl.parentElement.querySelector('.color-swatch');
-
-            inputEl.addEventListener('input', (e) => {
-                const color = e.target.value;
-                const cssVar = e.target.getAttribute('data-variable');
-                applyColor(cssVar, color);
-                swatch.style.backgroundColor = color;
-                
-                if (cssVar === '--gui-accent') {
-                    const baseColor = parseInt(color.substring(1), 16);
-                    const r = (baseColor >> 16) & 255;
-                    const g = (baseColor >> 8) & 255;
-                    const b = baseColor & 255;
-                    const darkerR = Math.max(0, r - 20);
-                    const darkerG = Math.max(0, g - 20);
-                    const darkerB = Math.max(0, b - 20);
-                    const darkerHex = `#${((1 << 24) + (darkerR << 16) + (darkerG << 8) + darkerB).toString(16).slice(1)}`;
-
-                    applyColor('--gui-accent-hover', darkerHex);
-                }
+        // Attach color change listeners
+        content.querySelectorAll('input[type="color"]').forEach(input => {
+            const swatch = input.nextElementSibling;
+            input.addEventListener('input', (e) => {
+                const key = e.target.dataset.cssVar;
+                const value = e.target.value;
+                saveColor(key, value);
+                swatch.style.backgroundColor = value;
             });
         });
+        
+        // Attach Fullscreen Toggle listener
+        content.querySelector('#fs-toggle').addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            localStorage.setItem('gui-fullscreen-on-load', isChecked);
+        });
 
-        shadow.getElementById('reset-colors-btn').addEventListener('click', () => {
+        // Attach Reset button listener
+        content.querySelector('#reset-colors-btn').addEventListener('click', () => {
             for (const key in DEFAULT_COLORS) {
-                localStorage.removeItem(key);
-                host.style.removeProperty(key);
+                saveColor(key, DEFAULT_COLORS[key]);
+                shadow.getElementById(`color-picker-${key.slice(2)}`).value = DEFAULT_COLORS[key];
+                shadow.getElementById(`color-picker-${key.slice(2)}`).nextElementSibling.style.backgroundColor = DEFAULT_COLORS[key];
             }
-            alert('Colors reset to default. Re-open settings to see changes.');
-            panel.remove();
-        });
-
-        shadow.getElementById('new-tab-toggle').addEventListener('change', (e) => {
-            const settingKey = e.target.getAttribute('data-setting-key');
-            localStorage.setItem(settingKey, e.target.checked);
         });
     }
 
-    // 10. Dropdown Population and Event Listeners
-    function populateDropdown() {
-        const dropdownButtons = [
-            // ⭐ MODIFIED: Button now calls openChatWindow()
-            { name: "User Chat", id: "chat-nav-btn", icon: icons.chat, handler: openChatWindow }, 
-            { name: "Games", id: "game-library-nav-btn", icon: icons.game, handler: showGameLibrary },
-            { name: "Proxy Browser", id: "browser-nav-btn", icon: icons.browser, handler: showProxyWindow },
-            { name: "Partners", id: "partners-nav-btn", icon: icons.link, handler: showPartnersWindow },
-            { name: "Settings", id: "settings-nav-btn", icon: icons.settings, handler: showSettingsPanel },
-            { name: "Discord", id: "discord-nav-btn", icon: icons.discord, handler: () => window.open('https://discord.gg/your-invite-link', '_blank') }
-        ];
+    // 13. Initialization & Main Controls
+    dragElement(guiContainer, guiHeader);
 
-        dropdownContent.innerHTML = ''; 
-        
-        dropdownButtons.forEach(btn => {
-            const button = document.createElement('button');
-            button.id = btn.id;
-            button.title = btn.name;
-            const iconSVG = `<svg viewBox="0 0 24 24">${icons[btn.icon] || btn.icon}</svg>`; // Use object or direct SVG path
-            button.innerHTML = `${iconSVG}${btn.name}`;
-            button.addEventListener('click', (event) => {
-                event.stopPropagation();
-                btn.handler();
-                dropdownContent.classList.remove('show'); // Close dropdown after click
-            });
-            dropdownContent.appendChild(button);
-        });
-    }
-
-    // 10a. Main GUI controls logic 
     minBtn.addEventListener('click', () => {
-        guiContainer.classList.toggle('minimized');
-        // If minimized, ensure floating chat is closed to avoid clutter
-        if (guiContainer.classList.contains('minimized')) {
-             shadow.getElementById('chat-window')?.remove();
-             guiContainer.classList.remove('hide-chat'); // Clean up the state
+        guiContainer.classList.toggle('hide-chat');
+        // Close any floating windows when minimizing the main GUI
+        if (guiContainer.classList.contains('hide-chat')) {
+             closeAllFloatingWindows();
         }
     });
-    
+
     closeBtn.addEventListener('click', () => {
+        closeAllFloatingWindows();
         host.remove();
     });
 
-    // Dropdown Toggle Listener
-    dropdownToggle.addEventListener('click', (event) => {
-        event.stopPropagation();
-        dropdownContent.classList.toggle('show');
-    });
-
-    // Close dropdown if user clicks anywhere else
-    document.addEventListener('click', () => {
-        dropdownContent.classList.remove('show');
-    });
-    shadow.addEventListener('click', (e) => {
-        if (!mainDropdown.contains(e.target)) {
-             dropdownContent.classList.remove('show');
-        }
-    });
-
-    // 11. Initial setup
-    dragElement(guiContainer, guiHeader);
+    // Populate dropdown menu on load
     populateDropdown();
+
 })();
