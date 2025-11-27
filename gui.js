@@ -6,14 +6,17 @@
     }
 
     // --- Configuration ---
-    // NOTE: Update this URL to match your deployed Cloudflare Worker endpoint
+    // NOTE: This worker is still used for the chat assistant functionality.
     const WORKER_URL = 'https://twilight-hill-3941.blueboltgamingyt.workers.dev';
+    
+    // ⭐ NEW CONFIGURATION: SET YOUR GAMES WEBSITE URL HERE ⭐
+    const GAMES_WEBSITE_URL = 'https://www.noobsplayground.space/games.html'; 
+    // IMPORTANT: Replace the placeholder above with the actual URL of the website you want to embed.
     // --- End Configuration ---
 
     // 2. Create Host and Shadow DOM
     const host = document.createElement('div');
     host.id = 'my-ai-gui-root';
-    // The initial position is set here, but will be overwritten by the drag logic
     host.style.position = 'fixed'; 
     host.style.bottom = '20px';
     host.style.right = '20px';
@@ -22,11 +25,11 @@
 
     const shadow = host.attachShadow({ mode: 'open' });
 
-    // 3. Define Styles (Includes fixes for dragging and markdown rendering)
+    // 3. Define Styles (Updated for iFrame)
     const style = document.createElement('style');
     style.textContent = `
         :host {
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             position: fixed;
             bottom: 20px;
             right: 20px;
@@ -34,32 +37,30 @@
         }
 
         .container {
-            width: 350px;
-            height: 500px;
-            background-color: #1e1e1e;
-            color: white;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 320px;
+            height: 480px;
+            background-color: #2c2f33;
+            color: #f6f6f7;
+            border-radius: 10px;
+            display: grid;
+            grid-template-rows: 40px 1fr 50px 60px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
             overflow: hidden;
-            border: 1px solid #333;
+            border: 1px solid #444;
             transition: height 0.3s, width 0.3s;
         }
 
         /* --- Header/Drag Bar Styles --- */
         #gui-header {
-            height: 40px;
-            padding: 0 15px;
-            background-color: #111;
-            color: #ddd;
+            padding: 0 10px;
+            background-color: #23272a;
+            color: #ffffff;
             cursor: grab;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-top-left-radius: 12px;
-            border-top-right-radius: 12px;
-            flex-shrink: 0;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
         }
         #gui-header:active {
             cursor: grabbing;
@@ -67,7 +68,7 @@
         .header-controls button {
             background: none;
             border: none;
-            color: white;
+            color: #99aab5;
             font-weight: bold;
             font-size: 16px;
             margin-left: 5px;
@@ -76,15 +77,13 @@
             line-height: 1;
         }
         .close-btn:hover {
-            color: red;
+            color: #ff0000;
         }
         
         /* Minimized State */
         .minimized {
             height: 40px;
-            width: 300px;
-            border-bottom-left-radius: 12px;
-            border-bottom-right-radius: 12px;
+            width: 320px;
         }
         .minimized .chat-area, 
         .minimized .input-area,
@@ -92,74 +91,89 @@
             display: none;
         }
 
-        /* --- CHAT AREA AND MESSAGE STYLES (FINAL REVISION) --- */
+        /* --- CHAT AREA AND MESSAGE STYLES --- */
         .chat-area {
-            flex-grow: 1;
-            padding: 15px;
+            padding: 10px;
             overflow-y: auto;
-            display: flex;
+            display: flex; 
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
+            background-color: #36393f;
+        }
+        
+        .message-wrapper {
+            display: flex; 
+            width: 100%; 
         }
         
         .message {
             padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: 18px; 
+            font-size: 13px;
             line-height: 1.4;
-            white-space: normal;
             word-wrap: break-word;
-            
-            /* FINAL FIX: Forces element to size based on content width */
-            display: table;
-            max-width: 80%; 
+            width: fit-content; 
+            max-width: 75%; 
         }
         
+        .user-msg-wrapper {
+            justify-content: flex-end; 
+        }
+
+        .ai-msg-wrapper {
+            justify-content: flex-start; 
+        }
+
         .user-msg {
-            background-color: #007bff;
-            /* Pushes the message to the right side */
-            margin-left: auto; 
+            background-color: #7289da;
+            color: white;
+            border-bottom-right-radius: 4px; 
         }
 
         .ai-msg {
-            background-color: #333;
-            /* Pushes the message to the left side */
-            margin-right: auto;
+            background-color: #4f545c;
+            color: #ffffff;
+            border-bottom-left-radius: 4px; 
         }
-
+        
         /* --- Input and Nav Bar Styles --- */
         .input-area {
-            padding: 10px;
-            background-color: #252525;
+            padding: 8px 10px;
+            background-color: #2f3136;
             display: flex;
             gap: 5px;
-            flex-shrink: 0;
         }
         input {
             flex-grow: 1;
-            padding: 8px;
-            border-radius: 4px;
+            padding: 8px 12px;
+            border-radius: 20px;
             border: 1px solid #444;
-            background: #1e1e1e;
+            background: #40444b;
             color: white;
             outline: none;
+            font-size: 14px;
         }
         button.send-btn {
-            background: #007bff;
+            background: #7289da;
             border: none;
             color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
+            padding: 8px 15px;
+            border-radius: 20px;
             cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
         }
+        button.send-btn:hover {
+            background: #677bc4;
+        }
+
         .nav-bar {
             height: 60px;
-            background-color: #111;
+            background-color: #23272a;
             display: flex;
             justify-content: space-around;
             align-items: center;
-            border-top: 1px solid #333;
-            flex-shrink: 0;
+            border-top: 1px solid #36393f;
         }
         .nav-btn {
             background: none;
@@ -168,28 +182,85 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            opacity: 0.7;
-            color: white;
+            opacity: 0.8;
+            color: #99aab5;
             font-size: 10px;
+            transition: opacity 0.2s;
+        }
+        .nav-btn:hover {
+            opacity: 1;
+            color: white;
         }
         .nav-btn svg {
-            width: 24px;
-            height: 24px;
-            fill: white;
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
             margin-bottom: 2px;
         }
         .discord-btn svg {
-            fill: #5865F2;
+            fill: #7289da;
         }
 
-        /* --- Markdown and HTML Rendering Styles --- */
+        /* --- IFRAME GAME WINDOW STYLES --- */
+        #game-library-window {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px; /* Made wider for a better website view */
+            height: 600px; /* Made taller for a better website view */
+            background-color: #23272a;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.7);
+            z-index: 1000000;
+            display: grid;
+            grid-template-rows: 40px 1fr; /* Header, iFrame content */
+            overflow: hidden;
+            border: 2px solid #7289da;
+        }
+
+        #game-header {
+            background-color: #2c2f33;
+            color: white;
+            padding: 0 10px;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: grab; 
+        }
+        #game-header .close-btn {
+            color: #99aab5;
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            background: none;
+            border: none;
+            padding: 5px;
+        }
+        #game-header .close-btn:hover {
+            color: #ff0000;
+        }
+        
+        #game-iframe-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        #game-iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+        
+        /* --- Markdown and HTML Rendering Styles --- (Kept for chat functionality) */
         .markdown-content {
             padding: 0;
             margin: 0;
             width: 100%;
         }
-        
-        /* Lists */
         .markdown-content ul {
             list-style-type: disc;
             padding-left: 20px;
@@ -200,30 +271,7 @@
             margin-bottom: 5px;
             padding-left: 5px;
         }
-
-        /* Headings */
-        .markdown-content h2 {
-            font-size: 1.2em;
-            margin-top: 15px;
-            margin-bottom: 8px;
-            padding-bottom: 5px;
-        }
-
-        /* Display Math */
-        .math-display {
-            display: block;
-            text-align: center;
-            padding: 10px 0;
-            font-size: 1.1em;
-            font-family: serif;
-        }
-
-        /* Horizontal Rules */
-        .markdown-content hr {
-            border: none;
-            border-top: 1px solid #555;
-            margin: 10px 0;
-        }
+        /* ... (rest of markdown styles are the same) ... */
     `;
     shadow.appendChild(style);
 
@@ -247,14 +295,14 @@
             </div>
         </div>
         <div class="chat-area" id="chat-log">
-            <div class="message ai-msg">Hello! I am connected via your secure Cloudflare Worker. How can I help?</div>
+            <div class="message-wrapper ai-msg-wrapper"><div class="message ai-msg">Hello! I am connected via your secure Cloudflare Worker. How can I help?</div></div>
         </div>
         <div class="input-area">
             <input type="text" id="user-input" placeholder="Ask AI..." />
             <button class="send-btn" id="send-btn">Send</button>
         </div>
         <div class="nav-bar">
-            <button class="nav-btn" title="Games" onclick="console.log('Games Clicked: Add your games logic here.')"><svg viewBox="0 0 24 24">${icons.game}</svg>Games</button>
+            <button class="nav-btn" title="Games" id="game-library-btn"><svg viewBox="0 0 24 24">${icons.game}</svg>Games</button>
             <button class="nav-btn" title="Browser" onclick="console.log('Browser Clicked: Add your browser/proxy logic here.')"><svg viewBox="0 0 24 24">${icons.browser}</svg>Browser</button>
             <button class="nav-btn" title="Settings" onclick="alert('Settings Clicked: Implement your GUI settings here.')"><svg viewBox="0 0 24 24">${icons.settings}</svg>Settings</button>
             <button class="nav-btn discord-btn" title="Discord" onclick="window.open('https://discord.com', '_blank')"><svg viewBox="0 0 24 24">${icons.discord}</svg>Discord</button>
@@ -271,46 +319,39 @@
     const guiHeader = shadow.getElementById('gui-header');
     const minBtn = shadow.getElementById('min-btn');
     const closeBtn = shadow.getElementById('close-btn');
+    const gameLibraryBtn = shadow.getElementById('game-library-btn');
+
 
     // 7. Core UI Functions
     
-    // --- Message Rendering (Includes Markdown Fix) ---
-    function addMessage(text, className) {
+    // --- Message Rendering ---
+    function addMessage(text, type) { 
+        const wrapper = document.createElement('div');
+        wrapper.className = `message-wrapper ${type}-wrapper`;
+        
         const div = document.createElement('div');
-        div.className = `message ${className} markdown-content`;
+        div.className = `message ${type} markdown-content`;
 
         let htmlText = text;
-
-        // 1. Replace double asterisks (**) with bold tags (<b>)
+        // Simplified Markdown parsing (same as before)
         htmlText = htmlText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-        
-        // 2. Replace Heading Level 2 (##) with H2 tags
         htmlText = htmlText.replace(/^##\s*(.*)$/gm, '<h2>$1</h2>');
-
-        // 3. Replace single asterisks/dashes (*) for list items with <li> tags
         htmlText = htmlText.replace(/^[*-]\s+(.*)/gm, '<li>$1</li>');
-        
-        // 4. Wrap all generated <li> items in an unordered list (<ul>)
-        if (htmlText.includes('<li>')) {
-            if (!htmlText.includes('<ul>')) {
-                 htmlText = `<ul>${htmlText}</ul>`;
-            }
+        if (htmlText.includes('<li>') && !htmlText.includes('<ul>')) {
+             htmlText = `<ul>${htmlText}</ul>`;
         }
-
-        // 5. Wrap display math ($$...$$) in a block element
         htmlText = htmlText.replace(/\$\$(.*?)\$\$/gs, '<div class="math-display">$1</div>');
-        
-        // 6. Horizontal Rules (---)
         htmlText = htmlText.replace(/^---/gm, '<hr>');
 
         div.innerHTML = htmlText; 
         
-        chatLog.appendChild(div);
+        wrapper.appendChild(div);
+        chatLog.appendChild(wrapper);
         chatLog.scrollTop = chatLog.scrollHeight;
         return div;
     }
 
-    // --- AI Interaction Logic (Uses .text() for plain text response) ---
+    // --- AI Interaction Logic ---
     async function handleSend() {
         const text = input.value.trim();
         if (!text) return;
@@ -320,7 +361,7 @@
         
         input.disabled = true;
         sendBtn.disabled = true;
-        // The "AI is typing..." message needs the .ai-msg class to use the CSS margin/sizing fix
+        
         const loadingMsg = addMessage('AI is typing...', 'ai-msg');
 
         try {
@@ -330,19 +371,18 @@
                 body: JSON.stringify({ message: text })
             });
 
-            loadingMsg.remove();
+            loadingMsg.parentElement.remove();
             
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`Worker HTTP Error (${response.status}): ${errorText.substring(0, 100)}...`);
             }
             
-            // Worker sends plain text, so we use .text()
             const data = await response.text(); 
             addMessage(data, 'ai-msg');
 
         } catch (err) {
-            loadingMsg.remove();
+            loadingMsg.parentElement.remove();
             addMessage('**Connection/Request Error:** ' + err.message, 'ai-msg');
         } finally {
             input.disabled = false;
@@ -350,11 +390,53 @@
             input.focus();
         }
     }
+    
+    // --- Game Library Function (iFrame Implementation) ---
+
+    /**
+     * Creates and displays the Game Library UI window using an iFrame.
+     */
+    function showGameLibrary() {
+        // Prevent opening duplicates
+        if (shadow.getElementById('game-library-window')) return;
+        
+        if (!GAMES_WEBSITE_URL || GAMES_WEBSITE_URL === 'https://example.com/your-games-homepage/') {
+            alert("Error: Please update the GAMES_WEBSITE_URL variable in gui.js with your actual games website link.");
+            return;
+        }
+
+        const libraryWindow = document.createElement('div');
+        libraryWindow.id = 'game-library-window';
+        libraryWindow.innerHTML = `
+            <div id="game-header">
+                <span>🎮 Games Library (Embedded)</span>
+                <button class="close-btn" id="game-close-btn">x</button>
+            </div>
+            <div id="game-iframe-container">
+                <iframe src="${GAMES_WEBSITE_URL}"></iframe>
+            </div>
+        `;
+        
+        shadow.appendChild(libraryWindow);
+        
+        // Setup Dragging for the new window
+        dragElement(libraryWindow, shadow.getElementById('game-header'));
+
+        // Close button listener
+        shadow.getElementById('game-close-btn').addEventListener('click', () => {
+            libraryWindow.remove();
+        });
+        
+        // --- IMPORTANT NOTE ON IFRAMES ---
+        // If your games website uses security headers (like X-Frame-Options or Content-Security-Policy) 
+        // to prevent embedding, the iframe will likely be blank or show an error. 
+        // If this happens, you will need to modify the headers on your games website server.
+    }
 
 
     // 8. Dragging, Minimize, and Close Functions
 
-    // --- Dragging Logic ---
+    // --- Dragging Logic (Updated to handle both main GUI and Game Window) ---
     function dragElement(elmnt, dragHandle) {
         let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
         
@@ -367,7 +449,6 @@
             pos3 = e.clientX;
             pos4 = e.clientY;
             
-            // CRITICAL FIX: Attach events to the global window object
             window.onmouseup = closeDragElement;
             window.onmousemove = elementDrag;
             
@@ -384,11 +465,18 @@
             pos3 = e.clientX;
             pos4 = e.clientY;
             
+            // Allow the element to be moved relative to its current screen position
             elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
             elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
             
+            // Clear fixed positioning properties (bottom/right) if they exist
             elmnt.style.bottom = 'auto';
             elmnt.style.right = 'auto';
+            
+            // If it was the Game Library window, clear the transform property
+            if (elmnt.id === 'game-library-window') {
+                 elmnt.style.transform = 'none';
+            }
         }
 
         function closeDragElement() {
@@ -413,6 +501,9 @@
     // --- Close Logic ---
     function closeGui() {
         guiRoot.remove();
+        // Also remove any floating windows if the main UI is closed
+        const libraryWindow = shadow.getElementById('game-library-window');
+        if (libraryWindow) libraryWindow.remove();
     }
 
 
@@ -423,6 +514,9 @@
             handleSend();
         }
     });
+
+    // Game Library Button now calls the iFrame function
+    gameLibraryBtn.addEventListener('click', showGameLibrary);
 
     minBtn.addEventListener('click', toggleMinimize);
     closeBtn.addEventListener('click', closeGui);
