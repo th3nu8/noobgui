@@ -1,1 +1,4 @@
 javascript:(function(){     var script = document.createElement('script');     script.src = 'https://cdn.jsdelivr.net/gh/th3nu8/noobgui@latest/gui.js';     script.onload = function() {         console.log('NoobGUI loaded!');     };     document.body.appendChild(script); })();
+
+javascript:(function(){     var script = document.createElement('script');     script.src = 'https://raw.githubusercontent.com/th3nu8/noobgui/refs/heads/main/gui.js';     script.onload = function() {         console.log('NoobGUI loaded!');     };     document.body.appendChild(script); })();
+(this is for if the jsdelivr is outdated)
