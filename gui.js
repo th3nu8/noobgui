@@ -193,7 +193,7 @@
           padding: 8px 10px;
           background-color: var(--gui-bg-secondary);
           display: flex;
-          gap: 5px;
+          gap: 50px;
         }
         input {
           flex-grow: 1;
@@ -362,14 +362,14 @@
     container.className = 'container';
     container.innerHTML = `
         <div id="gui-header">
-            <span>AI Assistant</span>
+            <span>Noobs GUI</span>
             <div class="header-controls">
                 <button id="min-btn" title="Minimize">—</button>
                 <button id="close-btn" class="close-btn" title="Exit">x</button>
             </div>
         </div>
         <div class="chat-area" id="chat-log">
-            <div class="message-wrapper ai-msg-wrapper"><div class="message ai-msg">Hello! I am connected via your secure Cloudflare Worker. How can I help?</div></div>
+            <div class="message-wrapper ai-msg-wrapper"><div class="message ai-msg">Hell! Im Noob's AI, how can i help you?</div></div>
         </div>
         <div class="input-area">
             <input type="text" id="user-input" placeholder="Ask AI..." />
@@ -539,7 +539,7 @@
              alert("Error: Please update the GAMES_WEBSITE_URL variable.");
              return;
         }
-        createFloatingWindow('game-library-window', '🎮 Games Library (Embedded)', iframeHTML, '800px', '600px');
+        createFloatingWindow('game-library-window', '🎮 Games', iframeHTML, '800px', '600px');
     }
     
     // 9b. Proxy Browser (iframe)
@@ -559,7 +559,7 @@
             </button>
         `;
         
-        const panel = createFloatingWindow('proxy-browser-window', '🌐 Proxy Browser', iframeHTML, '800px', '600px', controls);
+        const panel = createFloatingWindow('proxy-browser-window', '🌐 Browser', iframeHTML, '800px', '600px', controls);
         if (!panel) return;
         
         // Attach Fullscreen Listener
