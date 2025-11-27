@@ -42,6 +42,16 @@
     const currentColors = loadColors();
     // --- End Color Setup ---
 
+    // ⭐ NEW UTILITY: Get a setting from localStorage (handles boolean conversion) ⭐
+    function getSetting(key, defaultValue) {
+        const value = localStorage.getItem(key);
+        if (value === null) return defaultValue;
+        if (typeof defaultValue === 'boolean') {
+            return value === 'true';
+        }
+        return value;
+    }
+    
     // 2. Create Host and Shadow DOM
     const host = document.createElement('div');
     host.id = 'my-ai-gui-root';
@@ -275,11 +285,11 @@
 
         #settings-panel {
             width: 350px;
-            height: 300px;
+            height: 350px; /* Adjusted height for new setting */
             grid-template-rows: 40px 1fr;
         }
         
-        /* ⭐ NEW: Partners Window Size ⭐ */
+        /* Partners Window Size */
         #partners-window {
             width: 400px;
             height: 450px;
@@ -348,13 +358,63 @@
             pointer-events: none;
             transition: background-color 0.2s;
         }
+        
+        /* ⭐ NEW: Toggle Switch Styling ⭐ */
+        .switch {
+          position: relative;
+          display: inline-block;
+          width: 34px;
+          height: 20px;
+        }
 
+        .switch input { 
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
 
+        .slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #ccc;
+          transition: .4s;
+          border-radius: 20px;
+        }
+
+        .slider:before {
+          position: absolute;
+          content: "";
+          height: 16px;
+          width: 16px;
+          left: 2px;
+          bottom: 2px;
+          background-color: white;
+          transition: .4s;
+          border-radius: 50%;
+        }
+
+        input:checked + .slider {
+          background-color: var(--gui-accent);
+        }
+
+        input:focus + .slider {
+          box-shadow: 0 0 1px var(--gui-accent);
+        }
+
+        input:checked + .slider:before {
+          transform: translateX(14px);
+        }
+        /* ⭐ END NEW TOGGLE STYLES ⭐ */
+        
         /* Iframe Styles */
         .iframe-container { width: 100%; height: 100%; }
         .iframe-container iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        /* ⭐ NEW: Partners Link Styles ⭐ */
+        /* Partners Link Styles */
         .partners-content h3 {
             border-bottom: 2px solid var(--gui-accent);
             padding-bottom: 5px;
@@ -435,7 +495,7 @@
     const closeBtn = shadow.getElementById('close-btn');
     const gameLibraryBtn = shadow.getElementById('game-library-btn');
     const browserBtn = shadow.getElementById('browser-btn');
-    const partnersBtn = shadow.getElementById('partners-btn'); // ⭐ NEW ELEMENT QUERY ⭐
+    const partnersBtn = shadow.getElementById('partners-btn'); 
     const settingsBtn = shadow.getElementById('settings-btn');
     const discordBtn = shadow.getElementById('discord-btn');
 
@@ -574,24 +634,86 @@
         return floatingWindow;
     }
 
-    // 9a. Game library (iframe)
+    // 9a. Game library (iframe) - MODIFIED
     function showGameLibrary() {
-        const iframeHTML = `<div class="iframe-container"><iframe src="${GAMES_WEBSITE_URL}"></iframe></div>`;
-        if (!GAMES_WEBSITE_URL || GAMES_WEBSITE_URL.includes('your-games-homepage')) {
+        const url = GAMES_WEBSITE_URL;
+        if (!url || url.includes('your-games-homepage')) {
              alert("Error: Please update the GAMES_WEBSITE_URL variable.");
              return;
         }
-        createFloatingWindow('game-library-window', '🎮 Games', iframeHTML, '800px', '600px');
+
+        const openInNewTab = getSetting('open-in-new-tab', false);
+
+        if (openInNewTab) {
+            // ⭐ NEW LOGIC: Open in about:blank tab ⭐
+            const newWindow = window.open('about:blank', '_blank');
+            if (newWindow) {
+                newWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Games Library</title>
+                        <style>
+                            body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+                            iframe { border: none; width: 100%; height: 100%; display: block; }
+                        </style>
+                    </head>
+                    <body>
+                        <iframe src="${url}"></iframe>
+                    </body>
+                    </html>
+                `);
+                newWindow.document.close();
+            } else {
+                alert("Could not open new tab. Please allow pop-ups for this site.");
+            }
+            // ⭐ END NEW LOGIC ⭐
+        } else {
+            // Existing logic: Open as floating window
+            const iframeHTML = `<div class="iframe-container"><iframe src="${url}"></iframe></div>`;
+            createFloatingWindow('game-library-window', '🎮 Games', iframeHTML, '800px', '600px');
+        }
     }
     
-    // 9b. Proxy Browser (iframe)
+    // 9b. Proxy Browser (iframe) - MODIFIED
     function showProxyWindow() {
-        if (!PROXY_URL || PROXY_URL.includes('holyub.com')) {
+        const url = PROXY_URL;
+        if (!url || url.includes('holyub.com')) {
              alert("Error: Please update the PROXY_URL variable with your actual link.");
              return;
         }
         
-        const iframeHTML = `<div class="iframe-container"><iframe id="proxy-iframe" src="${PROXY_URL}" allow="fullscreen" allowfullscreen></iframe></div>`;
+        const openInNewTab = getSetting('open-in-new-tab', false);
+
+        if (openInNewTab) {
+            // ⭐ NEW LOGIC: Open in about:blank tab ⭐
+            const newWindow = window.open('about:blank', '_blank');
+            if (newWindow) {
+                newWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Proxy Browser</title>
+                        <style>
+                            body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+                            iframe { border: none; width: 100%; height: 100%; display: block; }
+                        </style>
+                    </head>
+                    <body>
+                        <iframe src="${url}" allow="fullscreen" allowfullscreen></iframe>
+                    </body>
+                    </html>
+                `);
+                newWindow.document.close();
+            } else {
+                alert("Could not open new tab. Please allow pop-ups for this site.");
+            }
+            // ⭐ END NEW LOGIC ⭐
+            return;
+        }
+        
+        // Existing logic: Open as floating window
+        const iframeHTML = `<div class="iframe-container"><iframe id="proxy-iframe" src="${url}" allow="fullscreen" allowfullscreen></iframe></div>`;
         
         // Controls: Fullscreen button
         const controls = `
@@ -636,7 +758,7 @@
         });
     }
 
-    // ⭐ 9c. Partners Window (NEW FUNCTION) ⭐
+    // 9c. Partners Window 
     function showPartnersWindow() {
         let linksHTML = `<h3>Community & Partner Links</h3>`;
         
@@ -656,9 +778,8 @@
 
         createFloatingWindow('partners-window', '🔗 Partners', contentHTML, '400px', '450px');
     }
-    // ⭐ END NEW PARTNERS WINDOW FUNCTION ⭐
 
-    // 9d. Settings Panel (renamed from 9c)
+    // 9d. Settings Panel - MODIFIED
     function applyColor(cssVariable, color) {
         host.style.setProperty(cssVariable, color, 'important');
         localStorage.setItem(cssVariable, color);
@@ -667,6 +788,8 @@
     function showSettingsPanel() {
         const savedAccent = localStorage.getItem('--gui-accent') || DEFAULT_COLORS['--gui-accent'];
         const savedBg = localStorage.getItem('--gui-bg-main') || DEFAULT_COLORS['--gui-bg-main'];
+        // ⭐ NEW: Get saved state for the new toggle ⭐
+        const openInNewTabChecked = getSetting('open-in-new-tab', false) ? 'checked' : '';
         
         const contentHTML = `
             <div class="settings-content">
@@ -685,14 +808,24 @@
                         <input type="color" id="accent-color-input" value="${savedAccent}" data-variable="--gui-accent">
                     </div>
                 </div>
+                <hr>
+                <h3>Functionality</h3>
+                <div class="setting-group">
+                    <label for="new-tab-toggle">Open Games/Browser in New Tab</label>
+                    <label class="switch">
+                        <input type="checkbox" id="new-tab-toggle" ${openInNewTabChecked} data-setting="open-in-new-tab">
+                        <span class="slider"></span>
+                    </label>
+                </div>
             </div>
         `;
 
-        const panel = createFloatingWindow('settings-panel', '⚙️ Settings', contentHTML, '350px', '300px');
+        const panel = createFloatingWindow('settings-panel', '⚙️ Settings', contentHTML, '350px', '350px');
         if (!panel) return;
         
         panel.addEventListener('input', (e) => {
             const input = e.target;
+            
             if (input.type === 'color') {
                 const variable = input.getAttribute('data-variable');
                 const color = input.value;
@@ -721,7 +854,12 @@
                     applyColor('--gui-bg-secondary', secondaryColor);
                     applyColor('--gui-bg-input', adjustColor(color, 10)); 
                 }
+            } 
+            // ⭐ NEW LOGIC: Handle toggle switch change ⭐
+            else if (input.type === 'checkbox' && input.getAttribute('data-setting') === 'open-in-new-tab') {
+                localStorage.setItem('open-in-new-tab', input.checked);
             }
+            // ⭐ END NEW LOGIC ⭐
         });
         
     }
@@ -787,57 +925,46 @@
             newLeft = Math.max(minLeft, Math.min(newLeft, maxWidth));
             newTop = Math.max(minTop, Math.min(newTop, maxHeight));
             
-            // Apply the new clamped position
+            // Set the element's new position:
             elmnt.style.top = newTop + "px";
             elmnt.style.left = newLeft + "px";
         }
 
         function closeDragElement() {
+            /* stop moving when mouse button is released:*/
             window.onmouseup = null;
             window.onmousemove = null;
-            
             document.body.style.cursor = 'default';
             dragHandle.style.cursor = 'grab !important';
         }
     }
 
-
-    // 11. Minimize & close
-    function toggleMinimize() {
-        guiContainer.classList.toggle('minimized');
-        if (guiContainer.classList.contains('minimized')) {
-            minBtn.textContent = '☐';
-        } else {
-            minBtn.textContent = '—';
-        }
-    }
-
-    function closeGui() {
-        host.remove();
-        // Ensure all child windows are removed cleanly
-        shadow.querySelectorAll('.floating-window').forEach(win => win.remove());
-        
-        // If the main window was the fullscreen element (unlikely but safe check)
-        if (document.fullscreenElement) {
-             document.exitFullscreen();
-        }
-    }
-
-    // 12. Wire up events
+    // 11. Event Listeners
     sendBtn.addEventListener('click', handleSend);
     input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !sendBtn.disabled) handleSend();
+        if (e.key === 'Enter') {
+            handleSend();
+        }
     });
 
+    // Close/Minimize
+    closeBtn.addEventListener('click', () => {
+        host.remove();
+    });
+    minBtn.addEventListener('click', () => {
+        guiContainer.classList.toggle('minimized');
+    });
+
+    // Navigation buttons
     gameLibraryBtn.addEventListener('click', showGameLibrary);
     browserBtn.addEventListener('click', showProxyWindow);
-    partnersBtn.addEventListener('click', showPartnersWindow); // ⭐ NEW EVENT LISTENER ⭐
-    settingsBtn.addEventListener('click', showSettingsPanel); 
-    discordBtn.addEventListener('click', () => window.open('https://discord.gg/8BFU7tphfP', '_blank'));
+    partnersBtn.addEventListener('click', showPartnersWindow);
+    settingsBtn.addEventListener('click', showSettingsPanel);
+    discordBtn.addEventListener('click', () => {
+        window.open('https://discord.gg/your-invite-link', '_blank'); // Update this link!
+    });
 
-    minBtn.addEventListener('click', toggleMinimize);
-    closeBtn.addEventListener('click', closeGui);
-
-    // Initialize dragging on the main GUI container
+    // Initial drag setup for the main GUI
     dragElement(guiContainer, guiHeader);
+
 })();
