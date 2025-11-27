@@ -8,7 +8,14 @@
     // --- Configuration ---
     const WORKER_URL = 'https://twilight-hill-3941.blueboltgamingyt.workers.dev';
     const GAMES_WEBSITE_URL = 'https://www.noobsplayground.space/games.html';
-    const PROXY_URL = 'https://scramjet.mercurywork.shop/'; // Your updated proxy URL
+    const PROXY_URL = 'https://scramjet.mercurywork.shop/'; 
+    
+    // ⭐ NEW: Partner Links Configuration ⭐
+    const PARTNER_LINKS = [
+        { name: "t9 OS", url: "https://t9os.vercel.app" },
+        { name: "Refined Stuff", url: "https://educationallearning.azurewebsites.net/" },
+        { name: "Axiom", url: "https://ultralight.mwbread.com/" }
+    ];
     // --- End Configuration ---
     
     // --- Default & Saved Colors ---
@@ -232,7 +239,7 @@
         .nav-btn svg { width: 20px; height: 20px; fill: currentColor; margin-bottom: 2px; }
         .discord-btn svg { fill: var(--gui-accent); }
         
-        /* Floating Window Styles (Shared for Games, Proxy, Settings) */
+        /* Floating Window Styles (Shared for Games, Proxy, Settings, Partners) */
         .floating-window {
           position: fixed;
           top: 50%;
@@ -272,6 +279,12 @@
             grid-template-rows: 40px 1fr;
         }
         
+        /* ⭐ NEW: Partners Window Size ⭐ */
+        #partners-window {
+            width: 400px;
+            height: 450px;
+        }
+
         /* Window Header Styles (Shared) */
         .floating-window-header {
           background-color: var(--gui-bg-main);
@@ -287,14 +300,15 @@
             align-items: center;
         }
 
-        /* Settings Content */
-        .settings-content {
+        /* Settings Content & Partners Content (Flex-based scrollable body) */
+        .settings-content, .partners-content {
             padding: 20px;
             background-color: var(--gui-bg-secondary);
             color: var(--gui-text-main);
             display: flex;
             flex-direction: column;
             gap: 15px;
+            overflow-y: auto;
         }
 
         .setting-group {
@@ -340,16 +354,43 @@
         .iframe-container { width: 100%; height: 100%; }
         .iframe-container iframe { width: 100%; height: 100%; border: none; display: block; }
 
+        /* ⭐ NEW: Partners Link Styles ⭐ */
+        .partners-content h3 {
+            border-bottom: 2px solid var(--gui-accent);
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+        .partner-link-item {
+            background-color: var(--gui-bg-main);
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .partner-link-item:hover {
+            background-color: var(--gui-bg-input);
+        }
+        
+        .partner-link-item a {
+            display: block;
+            color: var(--gui-accent);
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
         /* Markdown */
         .markdown-content ul { list-style-type: disc; padding-left: 20px; margin: 5px 0; }
         .markdown-content li { margin-bottom: 5px; padding-left: 5px; }
     `;
     shadow.appendChild(style);
 
-    // 4. Icons
+    // 4. Icons (Added 'link' icon)
     const icons = {
         game: '<path d="M21,6H3C1.9,6,1,6.9,1,8v8c0,1.1,0.9,2,2,2h18c1.1,0,2-0.9,2-2V8C23,6.9,22.1,6,21,6z M10,13H8v2H6v-2H4v-2h2V9h2v2h2V13z M14,13.5c-0.83,0-1.5-0.67-1.5-1.5s0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5S14.83,13.5,14,13.5z M18,10.5c-0.83,0-1.5-0.67-1.5-1.5s0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5S18.83,10.5,18,10.5z"/>',
         browser: '<path d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M11,19.93C7.05,19.44,4,16.08,4,12s3.05-7.44,7-7.93V19.93z M13,4.07C16.95,4.56,20,7.92,20,12s-3.05,7.44-7,7.93V4.07z"/>',
+        link: '<path d="M17,7h-4V5h4c1.65,0,3,1.35,3,3v8c0,1.65-1.35,3-3,3h-4v-2h4c0.55,0,1-0.45,1-1V8C18,7.45,17.55,7,17,7z M8,5C6.35,5,5,6.35,5,8v8c0,0.55,0.45,1,1,1h4v2H6c-1.65,0-3-1.35-3-3V8C3,6.35,4.35,5,6,5H8z M15,11h-6V9h6V11z"/>',
         settings: '<path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>',
         discord: '<path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.2 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.05-.04.09c.32.61.68 1.19 1.07 1.74c.03.01.06.02.09.01c1.72-.53 3.45-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.6-8.5-3.26-12.06a.06.06 0 0 0-.02-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.85 2.12-1.89 2.12z"/>',
         fullscreen: '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>',
@@ -377,6 +418,7 @@
         <div class="nav-bar">
             <button class="nav-btn" title="Games" id="game-library-btn"><svg viewBox="0 0 24 24">${icons.game}</svg>Games</button>
             <button class="nav-btn" title="Proxy Browser" id="browser-btn"><svg viewBox="0 0 24 24">${icons.browser}</svg>Browser</button>
+            <button class="nav-btn" title="Partners" id="partners-btn"><svg viewBox="0 0 24 24">${icons.link}</svg>Partners</button>
             <button class="nav-btn" title="Settings" id="settings-btn"><svg viewBox="0 0 24 24">${icons.settings}</svg>Settings</button>
             <button class="nav-btn discord-btn" title="Discord" id="discord-btn"><svg viewBox="0 0 24 24">${icons.discord}</svg>Discord</button>
         </div>
@@ -393,6 +435,7 @@
     const closeBtn = shadow.getElementById('close-btn');
     const gameLibraryBtn = shadow.getElementById('game-library-btn');
     const browserBtn = shadow.getElementById('browser-btn');
+    const partnersBtn = shadow.getElementById('partners-btn'); // ⭐ NEW ELEMENT QUERY ⭐
     const settingsBtn = shadow.getElementById('settings-btn');
     const discordBtn = shadow.getElementById('discord-btn');
 
@@ -593,7 +636,29 @@
         });
     }
 
-    // 9c. Settings Panel
+    // ⭐ 9c. Partners Window (NEW FUNCTION) ⭐
+    function showPartnersWindow() {
+        let linksHTML = `<h3>Community & Partner Links</h3>`;
+        
+        if (PARTNER_LINKS.length === 0) {
+            linksHTML += '<p>No partner links configured. Please edit the PARTNER_LINKS array in the script.</p>';
+        } else {
+            PARTNER_LINKS.forEach(partner => {
+                linksHTML += `
+                    <div class="partner-link-item">
+                        <a href="${partner.url}" target="_blank" rel="noopener noreferrer">${partner.name}</a>
+                    </div>
+                `;
+            });
+        }
+
+        const contentHTML = `<div class="partners-content">${linksHTML}</div>`;
+
+        createFloatingWindow('partners-window', '🔗 Partners', contentHTML, '400px', '450px');
+    }
+    // ⭐ END NEW PARTNERS WINDOW FUNCTION ⭐
+
+    // 9d. Settings Panel (renamed from 9c)
     function applyColor(cssVariable, color) {
         host.style.setProperty(cssVariable, color, 'important');
         localStorage.setItem(cssVariable, color);
@@ -766,6 +831,7 @@
 
     gameLibraryBtn.addEventListener('click', showGameLibrary);
     browserBtn.addEventListener('click', showProxyWindow);
+    partnersBtn.addEventListener('click', showPartnersWindow); // ⭐ NEW EVENT LISTENER ⭐
     settingsBtn.addEventListener('click', showSettingsPanel); 
     discordBtn.addEventListener('click', () => window.open('https://discord.gg/8BFU7tphfP', '_blank'));
 
