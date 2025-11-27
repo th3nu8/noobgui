@@ -600,7 +600,7 @@
                 </div>
             </div>
 
-            <span class="header-title">Noobs GUI v1.1</span>
+            <span class="header-title">Noobs GUI v1.2</span>
             
             <div class="header-controls">
                 <button id="min-btn" title="Minimize">—</button>
