@@ -585,19 +585,6 @@
     `;
     shadow.appendChild(style);
 
-    // 4. Icons 
-    const icons = {
-        menu: '<path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>',
-        chat: '<path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 14v-2h8v2H6zm10-3H6V9h10v2z"/>',
-        game: '<path d="M21,6H3C1.9,6,1,6.9,1,8v8c0,1.1,0.9,2,2,2h18c1.1,0,2-0.9,2-2V8C23,6.9,22.1,6,21,6z M10,13H8v2H6v-2H4v-2h2V9h2v2h2V13z M14,13.5c-0.83,0-1.5-0.67-1.5-1.5s0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5S14.83,13.5,14,13.5z M18,10.5c-0.83,0-1.5-0.67-1.5-1.5s0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5S18.83,10.5,18,10.5z"/>',
-        browser: '<path d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M11,19.93C7.05,19.44,4,16.08,4,12s3.05-7.44,7-7.93V19.93z M13,4.07C16.95,4.56,20,7.92,20,12s-3.05,7.44-7,7.93V4.07z"/>',
-        link: '<path d="M17,7h-4V5h4c1.65,0,3,1.35,3,3v8c0,1.65-1.35,3-3,3h-4v-2h4c0.55,0,1-0.45,1-1V8C18,7.45,17.55,7,17,7z M8,5C6.35,5,5,6.35,5,8v8c0,0.55,0.45,1,1,1h4v-2H6c-1.65,0-3-1.35-3-3V8C3,6.35,4.35,5,6,5H8z M15,11h-6V9h6V11z"/>',
-        settings: '<path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>',
-        discord: '<path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.2 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.05-.04.09c.32.61.68 1.19 1.07 1.74c.03.01.06.02.09.01c1.72-.53 3.45-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.6-8.5-3.26-12.06a.06.06 0 0 0-.02-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.85 2.12-1.89 2.12z"/>',
-        fullscreen: '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>',
-        exitFullscreen: '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>'
-    };
-
     // 5. Build HTML (Main GUI)
     const container = document.createElement('div');
     container.className = 'container';
@@ -606,8 +593,7 @@
             <div class="header-menu">
                 <div class="dropdown-menu-container" id="main-dropdown">
                     <button class="dropdown-toggle" title="Menu">
-                        <svg viewBox="0 0 24 24">${icons.menu}</svg>
-                        Menu
+                        ☰
                     </button>
                     <div class="dropdown-content" id="main-dropdown-content">
                     </div>
@@ -645,7 +631,7 @@
 
     // ⭐ Utility: Drag element ⭐
     function dragElement(elmnt, dragHandle) {
-        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        let offsetX = 0, offsetY = 0, initialMouseX = 0, initialMouseY = 0; // Renamed pos variables for clarity
         
         function clamp(value, min, max) {
             return Math.min(Math.max(value, min), max);
@@ -654,28 +640,34 @@
         dragHandle.onmousedown = dragMouseDown;
 
         function dragMouseDown(e) {
+            // Prevent dragging if clicking controls
             if (e.target.closest('.window-controls') || e.target.closest('.dropdown-menu-container') || e.target.tagName.toLowerCase() === 'button') return;
             e = e || window.event;
             e.preventDefault();
             
-            const style = window.getComputedStyle(elmnt);
-            let currentTop = parseFloat(style.top);
-            let currentLeft = parseFloat(style.left);
-            if (style.transform.includes('translate')) {
-                const transformMatrix = new DOMMatrix(style.transform);
-                currentTop = window.innerHeight / 2 + transformMatrix.m42;
-                currentLeft = window.innerWidth / 2 + transformMatrix.m41;
-            }
-
-            pos3 = e.clientX;
-            pos4 = e.clientY;
+            // --- FIX START: Calculate and store the initial offset ---
             
+            // 1. Get the element's current on-screen position (rect)
+            const rect = elmnt.getBoundingClientRect();
+            
+            // 2. Set the element to fixed position without transform, using its current screen position
+            // This is CRITICAL to stop the element from snapping.
             elmnt.style.position = 'fixed'; 
-            elmnt.style.top = currentTop + 'px';
-            elmnt.style.left = currentLeft + 'px';
-            elmnt.style.transform = 'none'; 
-            elmnt.style.zIndex = '1000002';
+            elmnt.style.top = rect.top + 'px';
+            elmnt.style.left = rect.left + 'px';
+            elmnt.style.transform = 'none'; // Remove the centering transform
+            
+            // 3. Store the difference between the mouse position and the element's top-left corner
+            initialMouseX = e.clientX;
+            initialMouseY = e.clientY;
+            
+            offsetX = e.clientX - rect.left; // Distance from element's left edge to mouse
+            offsetY = e.clientY - rect.top;   // Distance from element's top edge to mouse
 
+            // Set z-index high for dragging
+            elmnt.style.zIndex = '1000002'; 
+
+            // Start listening for drag events
             shadow.ownerDocument.onmouseup = closeDragElement;
             shadow.ownerDocument.onmousemove = elementDrag;
         }
@@ -683,14 +675,12 @@
         function elementDrag(e) {
             e = e || window.event;
             e.preventDefault();
-
-            pos1 = pos3 - e.clientX;
-            pos2 = pos4 - e.clientY;
-            pos3 = e.clientX;
-            pos4 = e.clientY;
-
-            let newTop = elmnt.offsetTop - pos2;
-            let newLeft = elmnt.offsetLeft - pos1;
+            
+            // Calculate the new element position by subtracting the stored offset
+            let newLeft = e.clientX - offsetX;
+            let newTop = e.clientY - offsetY;
+            
+            // --- FIX END ---
 
             const boundsX = window.innerWidth - elmnt.offsetWidth;
             const boundsY = window.innerHeight - elmnt.offsetHeight;
@@ -700,6 +690,8 @@
         }
 
         function closeDragElement() {
+            // Restore z-index or handle any other cleanup
+            elmnt.style.zIndex = '999999'; 
             shadow.ownerDocument.onmouseup = null;
             shadow.ownerDocument.onmousemove = null;
         }
@@ -869,7 +861,6 @@
         // Default controls: Fullscreen, Close
         const defaultControls = `
             <button class="fullscreen-btn" title="Toggle Fullscreen">
-                <svg viewBox="0 0 24 24">${icons.fullscreen}</svg>
             </button>
             <button class="close-btn" title="Close">
                 <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
@@ -932,7 +923,7 @@
     function openGamesWindow() {
         createFloatingWindow(
             'games-window',
-            'Noobs Playground Games',
+            'Games',
             `<div class="iframe-container"><iframe src="${GAMES_WEBSITE_URL}"></iframe></div>`
         );
         closeDropdown();
@@ -941,7 +932,7 @@
     function openProxyWindow() {
         createFloatingWindow(
             'proxy-window',
-            'Web Proxy',
+            'Browser',
             `<div class="iframe-container"><iframe src="${PROXY_URL}"></iframe></div>`
         );
         closeDropdown();
@@ -952,7 +943,7 @@
         // ID: 'chat-window' is used for styling
         createFloatingWindow(
             'chat-window',
-            'Public Chat Room',
+            'Chat',
             `<div id="chat-window-content" class="iframe-container">${DEAD_SIMPLE_CHAT_IFRAME_HTML}</div>`,
             '450px',
             '650px'
@@ -969,12 +960,11 @@
             'partners-window',
             'Partner Links',
             `<div class="partners-content">
-                <h3>Our Friends</h3>
-                <p>Check out our partners' cool projects!</p>
+                <h3>Partners</h3>
                 ${linksHtml}
             </div>`,
             '400px',
-            '450px',
+            '280px',
             // Simple close button only
             `<button class="close-btn" title="Close">
                 <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
@@ -987,24 +977,19 @@
     function populateDropdown() {
         dropdownContent.innerHTML = `
             <button id="menu-chat-btn">
-                <svg viewBox="0 0 24 24">${icons.chat}</svg>
-                Public Chat
+                Chat
             </button>
             <button id="menu-games-btn">
-                <svg viewBox="0 0 24 24">${icons.game}</svg>
                 Games
             </button>
             <button id="menu-proxy-btn">
-                <svg viewBox="0 0 24 24">${icons.browser}</svg>
-                Web Proxy
+                Browser
             </button>
             <hr style="border-color: #4f545c; margin: 5px 0;">
             <button id="menu-partners-btn">
-                <svg viewBox="0 0 24 24">${icons.link}</svg>
                 Partners
             </button>
             <button id="menu-settings-btn">
-                <svg viewBox="0 0 24 24">${icons.settings}</svg>
                 Settings
             </button>
         `;
