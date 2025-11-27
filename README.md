@@ -1,4 +1,5 @@
 Welcome to Noobs GUI
+
 https://discord.gg/XGC3Mtgu
 # How to use!
 ## Chromebook
