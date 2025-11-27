@@ -1034,7 +1034,7 @@
             'Settings',
             `<div class="settings-content" id="settings-content"></div>`,
             '350px',
-            '350px'
+            '570px'
         );
         closeDropdown();
         
