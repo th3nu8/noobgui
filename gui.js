@@ -8,7 +8,7 @@
     // --- Configuration ---
     const WORKER_URL = 'https://twilight-hill-3941.blueboltgamingyt.workers.dev';
     const GAMES_WEBSITE_URL = 'https://www.noobsplayground.space/games.html';
-    const PROXY_URL = 'https://scramjet.mercurywork.shop/'; 
+    const PROXY_URL = 'https://scramjet.mercurywork.shop/'; // Your updated proxy URL
     // --- End Configuration ---
     
     // --- Default & Saved Colors ---
@@ -462,7 +462,7 @@
         }
     }
     
-    // Fullscreen Toggling Function
+    // ⭐ FULLSCREEN TOGGLE (FIXED LOGIC) ⭐
     function getFullscreenElement() {
         return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
     }
@@ -493,7 +493,7 @@
         }
     }
 
-    // 9. Floating Window Creator (shared logic for Games, Proxy, Settings)
+    // 9. Floating Window Creator
     function createFloatingWindow(id, title, innerHTML, width = '800px', height = '600px', controls = '') {
         if (shadow.getElementById(id)) return;
         
@@ -503,7 +503,6 @@
         floatingWindow.style.width = width;
         floatingWindow.style.height = height;
         
-        // Structure corrected to incorporate controls
         floatingWindow.innerHTML = `
             <div class="floating-window-header">
                 <span>${title}</span>
@@ -534,6 +533,7 @@
 
     // 9a. Game library (iframe)
     function showGameLibrary() {
+        // We do not add the fullscreen attribute here since games are just embedded pages.
         const iframeHTML = `<div class="iframe-container"><iframe src="${GAMES_WEBSITE_URL}"></iframe></div>`;
         if (!GAMES_WEBSITE_URL || GAMES_WEBSITE_URL.includes('your-games-homepage')) {
              alert("Error: Please update the GAMES_WEBSITE_URL variable.");
@@ -544,13 +544,15 @@
     
     // 9b. Proxy Browser (iframe)
     function showProxyWindow() {
-        const iframeHTML = `<div class="iframe-container"><iframe src="${PROXY_URL}"></iframe></div>`;
         if (!PROXY_URL || PROXY_URL.includes('holyub.com')) {
              alert("Error: Please update the PROXY_URL variable with your actual link.");
              return;
         }
         
-        // Control buttons arranged horizontally: FS then Close
+        // ⭐ THE CRITICAL FIX: Adding allow="fullscreen" and allowfullscreen to the iframe
+        const iframeHTML = `<div class="iframe-container"><iframe id="proxy-iframe" src="${PROXY_URL}" allow="fullscreen" allowfullscreen></iframe></div>`;
+        
+        // Controls: Fullscreen button
         const controls = `
             <button id="proxy-fullscreen-btn" title="Fullscreen">
                 <svg viewBox="0 0 24 24">${icons.fullscreen}</svg>
@@ -578,11 +580,13 @@
              }
         };
 
+        // Attach listeners to the shadow root's owner document (the main page)
         shadow.ownerDocument.addEventListener('fullscreenchange', fullscreenChangeHandler);
         shadow.ownerDocument.addEventListener('webkitfullscreenchange', fullscreenChangeHandler);
         shadow.ownerDocument.addEventListener('mozfullscreenchange', fullscreenChangeHandler);
         shadow.ownerDocument.addEventListener('msfullscreenchange', fullscreenChangeHandler);
         
+        // Clean up listeners when the panel is removed
         panel.addEventListener('remove', () => {
             shadow.ownerDocument.removeEventListener('fullscreenchange', fullscreenChangeHandler);
             shadow.ownerDocument.removeEventListener('webkitfullscreenchange', fullscreenChangeHandler);
@@ -725,7 +729,10 @@
 
     function closeGui() {
         host.remove();
+        // Ensure all child windows are removed cleanly
         shadow.querySelectorAll('.floating-window').forEach(win => win.remove());
+        
+        // If the main window was the fullscreen element (unlikely but safe check)
         if (document.fullscreenElement) {
              document.exitFullscreen();
         }
@@ -740,7 +747,7 @@
     gameLibraryBtn.addEventListener('click', showGameLibrary);
     browserBtn.addEventListener('click', showProxyWindow);
     settingsBtn.addEventListener('click', showSettingsPanel); 
-    discordBtn.addEventListener('click', () => window.open('https://discord.com', '_blank'));
+    discordBtn.addEventListener('click', () => window.open('https://discord.gg/8BFU7tphfP', '_blank'));
 
     minBtn.addEventListener('click', toggleMinimize);
     closeBtn.addEventListener('click', closeGui);
