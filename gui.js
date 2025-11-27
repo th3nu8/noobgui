@@ -462,7 +462,7 @@
     container.className = 'container';
     container.innerHTML = `
         <div id="gui-header">
-            <span>Noobs GUI v1.0</span>
+            <span>Noobs GUI v1.1</span>
             <div class="header-controls">
                 <button id="min-btn" title="Minimize">—</button>
                 <button id="close-btn" class="close-btn" title="Exit">x</button>
