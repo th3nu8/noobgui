@@ -46,10 +46,8 @@
     }
     host.style.cssText = styleVariables;
     
-    // CRITICAL STYLES ON HOST
+    // CRITICAL STYLES ON HOST 
     host.style.setProperty('position', 'fixed', 'important');
-    host.style.setProperty('bottom', '20px', 'important');
-    host.style.setProperty('right', '20px', 'important');
     host.style.setProperty('z-index', '999999', 'important');
     
     document.body.appendChild(host);
@@ -63,8 +61,6 @@
           all: initial !important;
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
           position: fixed !important;
-          bottom: 20px !important;
-          right: 20px !important;
           z-index: 999999 !important;
           display: block !important;
         }
@@ -146,9 +142,12 @@
           overflow: hidden;
           border: 1px solid var(--gui-bg-main);
           transition: height 0.3s, width 0.3s;
+          /* --- CENTERING STYLES --- */
           position: fixed;
-          left: auto;
-          top: auto;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          /* --- END CENTERING STYLES --- */
         }
 
         /* Header / drag bar */
@@ -193,7 +192,7 @@
           padding: 8px 10px;
           background-color: var(--gui-bg-secondary);
           display: flex;
-          gap: 50px;
+          gap: 5px; 
         }
         input {
           flex-grow: 1;
@@ -362,7 +361,7 @@
     container.className = 'container';
     container.innerHTML = `
         <div id="gui-header">
-            <span>Noobs GUI</span>
+            <span>Noobs GUI v1.0</span>
             <div class="header-controls">
                 <button id="min-btn" title="Minimize">—</button>
                 <button id="close-btn" class="close-btn" title="Exit">x</button>
@@ -397,7 +396,7 @@
     const settingsBtn = shadow.getElementById('settings-btn');
     const discordBtn = shadow.getElementById('discord-btn');
 
-    // 7. Message rendering (same as before)
+    // 7. Message rendering
     function addMessage(text, type) {
         const wrapper = document.createElement('div');
         wrapper.className = `message-wrapper ${type}-wrapper`;
@@ -405,6 +404,7 @@
         div.className = `message ${type} markdown-content`;
 
         let htmlText = text;
+        // Simple Markdown conversion (bold, headers, lists, horizontal rules, and math)
         htmlText = htmlText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
         htmlText = htmlText.replace(/^##\s*(.*)$/gm, '<h2>$1</h2>');
         htmlText = htmlText.replace(/^[*-]\s+(.*)/gm, '<li>$1</li>');
@@ -422,7 +422,7 @@
         return div;
     }
 
-    // 8. AI interaction (same as before)
+    // 8. AI interaction
     async function handleSend() {
         const text = input.value.trim();
         if (!text) return;
@@ -462,7 +462,7 @@
         }
     }
     
-    // ⭐ FULLSCREEN TOGGLE (FIXED LOGIC) ⭐
+    // ⭐ FULLSCREEN TOGGLE LOGIC ⭐
     function getFullscreenElement() {
         return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
     }
@@ -533,7 +533,6 @@
 
     // 9a. Game library (iframe)
     function showGameLibrary() {
-        // We do not add the fullscreen attribute here since games are just embedded pages.
         const iframeHTML = `<div class="iframe-container"><iframe src="${GAMES_WEBSITE_URL}"></iframe></div>`;
         if (!GAMES_WEBSITE_URL || GAMES_WEBSITE_URL.includes('your-games-homepage')) {
              alert("Error: Please update the GAMES_WEBSITE_URL variable.");
@@ -549,7 +548,6 @@
              return;
         }
         
-        // ⭐ THE CRITICAL FIX: Adding allow="fullscreen" and allowfullscreen to the iframe
         const iframeHTML = `<div class="iframe-container"><iframe id="proxy-iframe" src="${PROXY_URL}" allow="fullscreen" allowfullscreen></iframe></div>`;
         
         // Controls: Fullscreen button
@@ -595,7 +593,7 @@
         });
     }
 
-    // 9c. Settings Panel (same as before)
+    // 9c. Settings Panel
     function applyColor(cssVariable, color) {
         host.style.setProperty(cssVariable, color, 'important');
         localStorage.setItem(cssVariable, color);
@@ -664,9 +662,10 @@
     }
 
 
-    // 10. Dragging
+    // 10. Dragging (FIXED)
     function dragElement(elmnt, dragHandle) {
-        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        let pos3 = 0, pos4 = 0; // Mouse position on click
+        let offsetX = 0, offsetY = 0; // Initial mouse offset relative to element top-left
         
         dragHandle.onmousedown = dragMouseDown;
 
@@ -677,8 +676,24 @@
             e = e || window.event;
             e.preventDefault();
             
+            // Get the current mouse position
             pos3 = e.clientX;
             pos4 = e.clientY;
+            
+            // --- FIX: Calculate the initial mouse offset relative to the element's visual position ---
+            const rect = elmnt.getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+
+            // Apply 'none' to transform and auto to top/left/right/bottom to start the manual positioning
+            elmnt.style.transform = 'none';
+            elmnt.style.bottom = 'auto';
+            elmnt.style.right = 'auto';
+            
+            // Set the *initial* position based on where it visually sits (no jump!)
+            elmnt.style.top = rect.top + "px";
+            elmnt.style.left = rect.left + "px";
+            // --- END FIX ---
             
             window.onmouseup = closeDragElement;
             window.onmousemove = elementDrag;
@@ -691,20 +706,25 @@
             e = e || window.event;
             e.preventDefault();
             
-            pos1 = pos3 - e.clientX;
-            pos2 = pos4 - e.clientY;
-            pos3 = e.clientX;
-            pos4 = e.clientY;
+            // The new position is the current mouse position minus the initial offset
+            let newLeft = e.clientX - offsetX;
+            let newTop = e.clientY - offsetY;
             
-            elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-            elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            // --- BOUNDARY CHECKING AND CLAMPING ---
             
-            elmnt.style.bottom = 'auto';
-            elmnt.style.right = 'auto';
+            const minLeft = 0; 
+            const minTop = 0; 
             
-            if (elmnt.classList.contains('floating-window')) {
-                elmnt.style.transform = 'none';
-            }
+            const maxWidth = window.innerWidth - elmnt.offsetWidth; 
+            const maxHeight = window.innerHeight - elmnt.offsetHeight; 
+
+            // Clamp the new positions
+            newLeft = Math.max(minLeft, Math.min(newLeft, maxWidth));
+            newTop = Math.max(minTop, Math.min(newTop, maxHeight));
+            
+            // Apply the new clamped position
+            elmnt.style.top = newTop + "px";
+            elmnt.style.left = newLeft + "px";
         }
 
         function closeDragElement() {
