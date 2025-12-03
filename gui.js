@@ -8,7 +8,7 @@
     // --- Configuration ---
     const WORKER_URL = 'https://twilight-hill-3941.blueboltgamingyt.workers.dev';
     const GAMES_WEBSITE_URL = 'https://www.noobsplayground.space/games.html';
-    const PROXY_URL = 'https://scramjet.mercurywork.shop/'; 
+    const PROXY_URL = 'browser.html'; 
     
     // ⭐ Dead Simple Chat Embed ⭐
     const DEAD_SIMPLE_CHAT_IFRAME_HTML = `
